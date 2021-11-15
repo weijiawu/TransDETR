@@ -1,13 +1,20 @@
 ## TransDETR: End-to-end Video Text Spotting with Transformer
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+</div>
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+</div>
 ![](pipeline.png)
 
 
 
 ## Introduction
 [End-to-end Video Text Spotting with Transformer]
+
+Video text spotting(VTS) is the task that requires simultaneously detecting, tracking and recognizing text instances
+in video. Recent methods typically develop sophisticated pipelines based on Intersection over Union (IoU)
+or appearance similarity in adjacent frames to tackle this task. In this paper, rooted in Transformer sequence modeling,
+we propose a novel video text **D**Etection, **T**racking, and **R**ecognition framework (TransDETR), which views the VTS task as a direct long-sequence temporal modeling problem.
 
 Link to our [MOVText: A Large-Scale, Multilingual Open World Dataset for Video Text Spotting](https://github.com/weijiawu/MOVText-Benchmark)
 
@@ -39,7 +46,7 @@ TransDETR | 55.7	|74.0	|69.3	|645	|334	|388
 
 
 ## Demo
-<img src="assets/demo.gif" width="400"/>  <img src="assets/demo1.gif" width="400"/>
+<img src="demo.gif" width="400"/>  <img src="demo1.gif" width="400"/>
 
 
 ## Installation
@@ -112,7 +119,7 @@ cd ../../
 
 #### Training on single node
 
-You can download COCOTextV2 pretrained weights from Pretrained TransDETR[Baidu Drive](https://pan.baidu.com/s/1tlKL6GKExViZYt5bvX_J4w) (password:s93i) [Google Drive](https://pan.baidu.com/s/1tlKL6GKExViZYt5bvX_J4w). Or training by youself:
+You can download COCOTextV2 pretrained weights from Pretrained TransDETR[Baidu Drive](https://pan.baidu.com/s/1tlKL6GKExViZYt5bvX_J4w) (password:s93i) [Google Drive](https://drive.google.com/file/d/1f-68-oquowMhf9U0ckreHjf1jFiaoqTX/view?usp=sharing). Or training by youself:
 ```bash 
 sh configs/r50_TransDETR_pretrain.sh
 
