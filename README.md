@@ -15,7 +15,7 @@ in video. Recent methods typically develop sophisticated pipelines based on Inte
 or appearance similarity in adjacent frames to tackle this task. In this paper, rooted in Transformer sequence modeling,
 we propose a novel video text **D**Etection, **T**racking, and **R**ecognition framework (TransDETR), which views the VTS task as a direct long-sequence temporal modeling problem.
 
-Link to our [MOVText: A Large-Scale, Multilingual Open World Dataset for Video Text Spotting](https://github.com/weijiawu/MOVText-Benchmark)
+Link to our new benchmark [BOVText: A Large-Scale, Bilingual Open World Dataset for Video Text Spotting](https://github.com/weijiawu/BOVText-Benchmark)
 
 
 ## Updates
@@ -36,7 +36,7 @@ Models are also available in [Baidu Drive](https://pan.baidu.com/s/12U8ssJ_Fl4aa
 ### [ICDAR2015(video) Video Text Spotting challenge](https://rrc.cvc.uab.es/?ch=3&com=evaluation&task=1)
 Methods | MOTA | MOTP | IDF1 | Mostly Matched |	Partially Matched |	Mostly Lost
 :---:|:---:|:---:|:---:|:---:|:---:|:---:
-TransDETR | 55.7	|74.0	|69.3	|645	|334	|388
+TransDETR | 58.4	|75.2	|70.4	|614	|326	|427
 
 #### Notes
 - The training time is on 8 NVIDIA V100 GPUs with batchsize 16.
@@ -57,11 +57,11 @@ The codebases are built on top of [Deformable DETR](https://github.com/fundament
 
     We recommend you to use Anaconda to create a conda environment:
     ```bash
-    conda create -n deformable_detr python=3.7 pip
+    conda create -n TransDETR python=3.7 pip
     ```
     Then, activate the environment:
     ```bash
-    conda activate deformable_detr
+    conda activate TransDETR
     ```
   
 * PyTorch>=1.5.1, torchvision>=0.6.1 (following instructions [here](https://pytorch.org/))
@@ -76,10 +76,13 @@ The codebases are built on top of [Deformable DETR](https://github.com/fundament
     pip install -r requirements.txt
     ```
 
-* Build MultiScaleDeformableAttention
+* Build MultiScaleDeformableAttention and Rotated ROIAlign
     ```bash
     cd ./models/ops
     sh ./make.sh
+	
+	cd ./models/Rotated_ROIAlign
+	python setup.py build_ext --inplace
     ```
 ## Usage
 
@@ -118,9 +121,9 @@ cd ../../
 
 #### Training on single node
 
-You can download COCOTextV2 pretrained weights from Pretrained TransDETR[Baidu Drive](https://pan.baidu.com/s/1tlKL6GKExViZYt5bvX_J4w) (password:s93i) [Google Drive](https://drive.google.com/file/d/1f-68-oquowMhf9U0ckreHjf1jFiaoqTX/view?usp=sharing). Or training by youself:
+You can download COCOTextV2 pretrained weights from Pretrained TransDETR [Baidu Drive](https://pan.baidu.com/s/1tlKL6GKExViZYt5bvX_J4w) (password:s93i) [Google Drive](https://drive.google.com/file/d/1f-68-oquowMhf9U0ckreHjf1jFiaoqTX/view?usp=sharing). Or training by youself:
 ```bash 
-sh configs/r50_TransDETR_pretrain.sh
+sh configs/r50_TransDETR_pretrain_COCOText.sh
 
 ```
 
@@ -164,4 +167,11 @@ TransDETR is released under MIT License.
 
 If you use TransDETR in your research or wish to refer to the baseline results published here, please use the following BibTeX entries:
 
-
+```
+@article{wu2022transdetr,
+  title={End-to-End Video Text Spotting with Transformer},
+  author={Weijia Wu, Chunhua Shen, Yuanqiang Cai, Debing Zhang, Ying Fu, Ping Luo, Hong Zhou},
+  journal={arxiv},
+  year={2022}
+}
+```
