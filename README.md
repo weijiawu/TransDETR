@@ -142,6 +142,18 @@ You can download the pretrained model of TransDETR (the link is in "Main Results
 sh configs/r50_TransDETR_eval.sh
 
 ```
+evaluate on ICDAR13
+```
+python tools/Evaluation_ICDAR13/evaluation.py
+
+```
+evaluate on ICDAR15
+```
+cd exps/e2e_TransVTS_r50_ICDAR15
+zip -r preds.zip ./preds/*
+
+```
+then submit to the [ICDAR2015 online metric](https://rrc.cvc.uab.es/?ch=3&com=evaluation&task=4)
 
 #### Visualization 
 
