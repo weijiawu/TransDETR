@@ -8,7 +8,7 @@
 
 
 ## Introduction
-[End-to-end Video Text Spotting with Transformer]
+[End-to-end Video Text Spotting with Transformer](https://arxiv.org/abs/2203.10539)
 
 Video text spotting(VTS) is the task that requires simultaneously detecting, tracking and recognizing text instances
 in video. Recent methods typically develop sophisticated pipelines based on Intersection over Union (IoU)
