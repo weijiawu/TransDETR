@@ -19,9 +19,13 @@ Link to our new benchmark [BOVText: A Large-Scale, Bilingual Open World Dataset 
 
 
 ## Updates
-- (08/04/2021) Refactoring the code.  
 
-- (10/20/2021) The complete code has been released . 
+- (12/05/2022) Rotated_ROIAlig has been refined.  
+
+
+- (08/04/2022) Refactoring the code.  
+
+- (1/1/2022) The complete code has been released . 
 
 ## Performance
 
