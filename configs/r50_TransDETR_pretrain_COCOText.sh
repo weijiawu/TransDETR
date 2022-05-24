@@ -35,7 +35,7 @@ python3 -m torch.distributed.launch --nproc_per_node=8 \
     --pretrained ${PRETRAIN} \
     --query_interaction_layer 'QIM' \
     --extra_track_attn \
-    --mot_path /share/wuweijia/Data/VideoText/MOTR\
+    --mot_path ./dataset_root/\
     --data_txt_path_train ./datasets/data_path/COCOTextV2.train \
     --data_txt_path_val ./datasets/data_path/COCOTextV2.train 
     
