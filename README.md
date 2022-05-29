@@ -20,10 +20,14 @@ Link to our new benchmark [BOVText: A Large-Scale, Bilingual Open World Dataset 
 
 ## Updates
 
+- (29/05/2022) Update unmatched pretrained and finetune weight.  
+
+
 - (12/05/2022) Rotated_ROIAlig has been refined.  
 
 
 - (08/04/2022) Refactoring the code.  
+
 
 - (1/1/2022) The complete code has been released . 
 
@@ -35,12 +39,16 @@ Methods | MOTA | MOTP | IDF1 | Mostly Matched |	Partially Matched |	Mostly Lost
 :---:|:---:|:---:|:---:|:---:|:---:|:---:
 TransDETR | 47.5	|74.2	|65.5	|832	|484	|600
 
-Models are also available in [Baidu Drive](https://pan.baidu.com/s/12U8ssJ_Fl4aaMtW1By4GPw) (password:4n03) or [Google Drive](https://drive.google.com/file/d/1r3J8Z5qwUv6sxV64FkSuU9XtGTfHrgxC/view?usp=sharing).
+Models are also available in [Google Drive](https://drive.google.com/file/d/1tXWAy3Fjf-55Q40WHGvlotukrsvB5KKn/view?usp=sharing).
+
 
 ### [ICDAR2015(video) Video Text Spotting challenge](https://rrc.cvc.uab.es/?ch=3&com=evaluation&task=1)
 Methods | MOTA | MOTP | IDF1 | Mostly Matched |	Partially Matched |	Mostly Lost
 :---:|:---:|:---:|:---:|:---:|:---:|:---:
 TransDETR | 58.4	|75.2	|70.4	|614	|326	|427
+:---:|:---:|:---:|:---:|:---:|:---:|:---:
+TransDETR(aug) | 60.9	|74.6	|72.8	|644	|323	|400
+Models are also available in [Google Drive](https://drive.google.com/file/d/1tXWAy3Fjf-55Q40WHGvlotukrsvB5KKn/view?usp=sharing).
 
 #### Notes
 - The training time is on 8 NVIDIA V100 GPUs with batchsize 16.
@@ -125,7 +133,7 @@ cd ../../
 
 #### Training on single node
 
-You can download COCOTextV2 pretrained weights from Pretrained TransDETR [Baidu Drive](https://pan.baidu.com/s/1tlKL6GKExViZYt5bvX_J4w) (password:s93i) [Google Drive](https://drive.google.com/file/d/1f-68-oquowMhf9U0ckreHjf1jFiaoqTX/view?usp=sharing). Or training by youself:
+You can download COCOTextV2 pretrained weights from Pretrained TransDETR [Google Drive](https://drive.google.com/file/d/1PvOvBVpJLewN5uMnSeiJddmDGh3rKcyv/view?usp=sharing). Or training by youself:
 ```bash 
 sh configs/r50_TransDETR_pretrain_COCOText.sh
 
