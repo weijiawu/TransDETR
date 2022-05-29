@@ -46,8 +46,8 @@ Models are also available in [Google Drive](https://drive.google.com/file/d/1tXW
 Methods | MOTA | MOTP | IDF1 | Mostly Matched |	Partially Matched |	Mostly Lost
 :---:|:---:|:---:|:---:|:---:|:---:|:---:
 TransDETR | 58.4	|75.2	|70.4	|614	|326	|427
-:---:|:---:|:---:|:---:|:---:|:---:|:---:
 TransDETR(aug) | 60.9	|74.6	|72.8	|644	|323	|400
+
 Models are also available in [Google Drive](https://drive.google.com/file/d/1tXWAy3Fjf-55Q40WHGvlotukrsvB5KKn/view?usp=sharing).
 
 #### Notes
