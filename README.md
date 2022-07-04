@@ -197,7 +197,7 @@ If you use TransDETR in your research or wish to refer to the baseline results p
 @article{wu2022transdetr,
   title={End-to-End Video Text Spotting with Transformer},
   author={Weijia Wu, Chunhua Shen, Yuanqiang Cai, Debing Zhang, Ying Fu, Ping Luo, Hong Zhou},
-  journal={arxiv},
+  journal={ECCV2022},
   year={2022}
 }
 ```
