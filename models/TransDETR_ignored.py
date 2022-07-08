@@ -435,11 +435,6 @@ class ClipMatcher(SetCriterion):
 class RuntimeTrackerBase(object):
     def __init__(self, score_thresh=0.5, filter_score_thresh=0.2, miss_tolerance=3):
         #dataset score_thresh, filter_score_thresh
-        # ICDAR15 0.5 0.2  3(COCOText: 0.6 0.4)
-        # YVT 0.3 0.2
-        # Minetto 0.4 0.3
-        # ICDAR13(detection) 0.4 0.25
-        # BOVText 
         self.score_thresh = score_thresh
         self.filter_score_thresh = filter_score_thresh
         self.miss_tolerance = miss_tolerance

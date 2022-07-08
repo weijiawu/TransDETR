@@ -20,7 +20,8 @@ Link to our new benchmark [BOVText: A Large-Scale, Bilingual Open World Dataset 
 
 ## Updates
 
-- (04/07/2022) TransDETR is accepted by ECCV2022. 
+- (08/07/2022) TransDETR is accepted by ECCV2022 as an **Oral**!! 
+
 
 - (29/05/2022) Update unmatched pretrained and finetune weight.  
 
