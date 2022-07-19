@@ -202,3 +202,35 @@ If you use TransDETR in your research or wish to refer to the baseline results p
   year={2022}
 }
 ```
+
+
+If you have any questions, please contact me at: weijiawu@zju.edu.cn
+
+This code uses codes from MOTR, TransVTSpotter and EAST. Many thanks to their wonderful work. Consider citing them as well:
+```
+@inproceedings{zeng2021motr,
+  title={MOTR: End-to-End Multiple-Object Tracking with TRansformer},
+  author={Zeng, Fangao and Dong, Bin and Zhang, Yuang and Wang, Tiancai and Zhang, Xiangyu and Wei, Yichen},
+  booktitle={European Conference on Computer Vision (ECCV)},
+  year={2022}
+}
+
+@article{wu2021bilingual,
+  title={A bilingual, OpenWorld video text dataset and end-to-end video text spotter with transformer},
+  author={Wu, Weijia and Cai, Yuanqiang and Zhang, Debing and Wang, Sibo and Li, Zhuang and Li, Jiahong and Tang, Yejun and Zhou, Hong},
+  journal={arXiv preprint arXiv:2112.04888},
+  year={2021}
+}
+
+@inproceedings{zhou2017east,
+  title={East: an efficient and accurate scene text detector},
+  author={Zhou, Xinyu and Yao, Cong and Wen, He and Wang, Yuzhi and Zhou, Shuchang and He, Weiran and Liang, Jiajun},
+  booktitle={Proceedings of the IEEE conference on Computer Vision and Pattern Recognition},
+  pages={5551--5560},
+  year={2017}
+}
+
+
+
+
+```
