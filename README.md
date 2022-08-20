@@ -1,4 +1,4 @@
-## TransDETR: End-to-end Video Text Spotting with Transformer (ECCV oral)
+## TransDETR: End-to-end Video Text Spotting with Transformer
 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
