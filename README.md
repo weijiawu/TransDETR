@@ -20,7 +20,7 @@ Link to our new benchmark [BOVText: A Large-Scale, Bilingual Open World Dataset 
 
 ## Updates
 
-- (08/07/2022) TransDETR is accepted by ECCV2022 as an **Oral**!! 
+- (08/07/2022) TransDETR remain under review.
 
 
 - (29/05/2022) Update unmatched pretrained and finetune weight.  
@@ -198,7 +198,7 @@ If you use TransDETR in your research or wish to refer to the baseline results p
 @article{wu2022transdetr,
   title={End-to-End Video Text Spotting with Transformer},
   author={Weijia Wu, Chunhua Shen, Yuanqiang Cai, Debing Zhang, Ying Fu, Ping Luo, Hong Zhou},
-  journal={ECCV2022},
+  journal={arxiv},
   year={2022}
 }
 ```
