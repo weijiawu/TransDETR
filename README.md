@@ -20,6 +20,8 @@ Link to our new benchmark [BOVText: A Large-Scale, Bilingual Open World Dataset 
 
 ## Updates
 
+- (09/02/2023) Script(visualization and frame extraction) for [DSText](https://rrc.cvc.uab.es/?ch=22&com=downloads) is provided.
+
 - (08/07/2022) TransDETR remain under review.
 
 
