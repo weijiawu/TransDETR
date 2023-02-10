@@ -45,18 +45,14 @@ def cv2AddChineseText(image, text, position, textColor=(0, 0, 0), textSize=30):
     image,rgb = mask_image(image, mask_1,[255,255,255])
     
     
-    if (isinstance(image, np.ndarray)):  # 判断是否OpenCV图片类型
+    if (isinstance(image, np.ndarray)):
         image = Image.fromarray(cv2.cvtColor(np.uint8(image.astype(np.float32)), cv2.COLOR_BGR2RGB))
-    # 创建一个可以在给定图像上绘图的对象
     draw = ImageDraw.Draw(image)
-    # 字体的格式
     fontStyle = ImageFont.truetype(
         "./tools/simsun.ttc", textSize, encoding="utf-8")
-    # 绘制文本
     draw.text(position, text, textColor, font=fontStyle)
     
     image = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
-    # 转换回OpenCV格式
                     
     return image
 
@@ -78,7 +74,7 @@ def mask_image(image, mask_2d, rgb=None, valid = False):
     
     if valid:
         mask_3d_color[mask_2d[:, :] == 1] = [[0,0,0]]
-        kernel = np.ones((5,5),np.uint8)  
+        kernel = np.ones((5,5),np.uint8)
         mask_2d = cv2.dilate(mask_2d,kernel,iterations = 4)
         mask = (mask_2d!=0).astype(bool)
         image[mask] = image[mask] * 0 + mask_3d_color[mask] * 1
@@ -88,8 +84,8 @@ def mask_image(image, mask_2d, rgb=None, valid = False):
 
 
 def get_rotate_mat(theta):
-	'''positive theta value means rotate clockwise'''
-	return np.array([[math.cos(theta), -math.sin(theta)], [math.sin(theta), math.cos(theta)]])
+    '''positive theta value means rotate clockwise'''
+    return np.array([[math.cos(theta), -math.sin(theta)], [math.sin(theta), math.cos(theta)]])
 
 
 class DetMOTDetection:
@@ -112,8 +108,11 @@ class DetMOTDetection:
         if "BOVText" in data_txt_path:
             self.label_files = [(("/share/wuweijia/Data/VideoText/MOTR/BOVText/labels_with_ids/train" + x.split("/Frames")[1]).replace('.png', '.txt').replace('.jpg', '.txt'))
                             for x in self.img_files]
+        if "VideoSynthText" in data_txt_path:
+            self.label_files = [(x.replace('images', 'labels_with_ids').replace('.png', '.txt').replace('.jpg', '.txt'))
+                            for x in self.img_files]
         elif "SynthText" in data_txt_path:
-            self.label_files = [(("/share/wuweijia/Data/VideoText/MOTR/SynthText/labels_with_ids/train" + x.split("/SynthText")[1]).replace('.png', '.txt').replace('.jpg', '.txt'))
+            self.label_files = [(("/mmu-ocr/weijiawu/Data/VideoText/MOTR/SynthText/labels_with_ids/train" + x.split("/SynthText")[1]).replace('.png', '.txt').replace('.jpg', '.txt')) if len(x.split("/SynthText"))>1 else (x.replace('images', 'labels_with_ids').replace('.png', '.txt').replace('.jpg', '.txt'))
                             for x in self.img_files]
         else:
             self.label_files = [(x.replace('images', 'labels_with_ids').replace('.png', '.txt').replace('.jpg', '.txt'))
@@ -225,7 +224,7 @@ class DetMOTDetection:
                     except:
                         print(text)
 
-                    word = text[-1].lower()
+                    word = text[-1]
                     gt_word = np.full((self.max_word_len,), self.char2id['PAD'], dtype=np.int)
                     for j, char in enumerate(word):
                         if j > self.max_word_len - 1:
@@ -268,12 +267,26 @@ class DetMOTDetection:
             targets['dataset'] = 'ICDAR15_Pre'
         elif 'COCOTextV2' in img_path:
             targets['dataset'] = 'COCOTextV2'
+        elif 'VideoSynthText' in img_path:
+            targets['dataset'] = 'VideoSynthText'
+        elif 'FlowTextV2' in img_path:
+            targets['dataset'] = 'FlowTextV2'
+        elif 'FlowText' in img_path:
+            targets['dataset'] = 'FlowText'
         elif 'SynthText' in img_path:
-            targets['dataset'] = 'SynthText'    
+            targets['dataset'] = 'SynthText'
+        elif 'VISD' in img_path:
+            targets['dataset'] = 'VISD'
         elif 'YVT' in img_path:
             targets['dataset'] = 'YVT'
+        elif 'UnrealText' in img_path:
+            targets['dataset'] = 'UnrealText'
         elif 'BOVTextV2' in img_path:
             targets['dataset'] = 'BOVText'
+        elif 'FlowImage' in img_path:
+            targets['dataset'] = 'FlowImage'
+        elif 'DSText' in img_path:
+            targets['dataset'] = 'DSText'
         else:
             raise NotImplementedError()
         targets['boxes'] = []
@@ -392,9 +405,10 @@ class DetMOTDetection:
                     text_size = int(short_side * 0.05)
 #                     print(texts_ignored)
 #                     image=cv2AddChineseText(image,str(texts_ignored.cpu().numpy()), (int(res[0,0]), int(res[1,0]) - text_size),(0,255,255), text_size)
-                    image=cv2AddChineseText(image,str(obj_id.cpu().numpy())+str(texts_ignored.cpu().numpy()), (int(res[0,0]), int(res[1,0]) - text_size),(0,255,255), text_size)
+#                     image=cv2AddChineseText(image,str(obj_id.cpu().numpy())+str(texts_ignored.cpu().numpy()), (int(res[0,0]), int(res[1,0]) - text_size),(0,255,255), text_size)
 
                 cv2.imwrite("./exps/show/{}_{}.jpg".format(image_icdxx,idx1),image)
+#                 cv2.imwrite("./exps/show/original_{}_{}.jpg".format(image_icdxx,idx1),imge)
 
 
         gt_instances = []
@@ -522,10 +536,16 @@ def build_dataset2transform(args, image_set):
     BOVText_train = make_transforms_for_BOVText('train', args)
 
     crowdhuman_train = make_transforms_for_crowdhuman('train', args)
-    dataset2transform_train = {'ICDAR2015': mot17_train, 'YVT': mot17_train, 'BOVText': BOVText_train,
-                               'SynthText': mot17_train, 'COCOTextV2': crowdhuman_train, "ICDAR15_Pre": crowdhuman_train}
-    dataset2transform_val = {'ICDAR2015': mot17_test, 'YVT': mot17_test,'BOVText': mot17_test, 
-                             'SynthText': mot17_test,'COCOTextV2': mot17_test,"ICDAR15_Pre": crowdhuman_train}
+    dataset2transform_train = {'ICDAR2015': mot17_train,'DSText': mot17_train,  'VideoSynthText':mot17_train, 'FlowText':mot17_train, 'FlowTextV2':mot17_train,
+                       'YVT': mot17_train,
+                       'BOVText': BOVText_train, 'SynthText': crowdhuman_train, 'UnrealText': crowdhuman_train,
+                       'COCOTextV2': crowdhuman_train, 'VISD': crowdhuman_train, 'FlowImage': crowdhuman_train,
+                        "ICDAR15_Pre": crowdhuman_train}
+    
+    dataset2transform_val = {'ICDAR2015': mot17_test,'DSText': mot17_test, 'VideoSynthText':mot17_test, 'FlowText':mot17_test, 'YVT': mot17_test,
+                     'FlowTextV2':mot17_test,
+                     'BOVText': mot17_test, 'SynthText': mot17_test, 'UnrealText': mot17_test,
+                     'COCOTextV2': mot17_test,'VISD': mot17_test,'FlowImage': mot17_test,"ICDAR15_Pre": crowdhuman_train}
     if image_set == 'train':
         return dataset2transform_train
     elif image_set == 'val':
