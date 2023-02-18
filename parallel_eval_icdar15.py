@@ -716,14 +716,12 @@ class Detector(object):
                 self.visualize_img_with_bbox(cur_vis_img_path, ori_img, dt_instances, ref_pts=all_ref_pts, gt_boxes=gt_boxes,rgbs=rgbs)
 
             boxes,IDs,scores,words = dt_instances.boxes, dt_instances.obj_idxes, dt_instances.scores, dt_instances.word
-            roi_features = dt_instances.roi
+            
             lines = []
-            for box,ID,score,word,roi_feature in zip(boxes,IDs,scores,words,roi_features):
+            for box,ID,score,word in zip(boxes,IDs,scores,words):
                 score =score.item()
-                roi_feature = np.array(roi_feature).tolist()
                 x1, y1, x2, y2, x3, y3, x4, y4 = [int(i) for i in box[:8]]
-#                 print(roi_feature)
-                lines.append([x1, y1, x2, y2, x3, y3, x4, y4,int(ID),word,score,roi_feature])
+                lines.append([x1, y1, x2, y2, x3, y3, x4, y4,int(ID),word,score])
             
     
             annotation.update({str(i+1):lines})  
