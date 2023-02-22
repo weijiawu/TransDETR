@@ -5,7 +5,7 @@
 # Copyright (c) 2020 SenseTime. All Rights Reserved.
 # ------------------------------------------------------------------------
 
-EXP_DIR=exps/e2e_TransVTS_r50_DSText
+EXP_DIR=./exps/e2e_TransVTS_r50_DSText
 
 
 python3 parallel_eval_icdar15.py \
