@@ -3,7 +3,7 @@ import os
 import numpy as np
 from util.utils import write_result_as_txt,debug, setup_logger,write_lines,MyEncoder
 try:
-    import xml.etree.cElementTree as ET  # 解析xml的c语言版的模块
+    import xml.etree.cElementTree as ET  
 except ImportError:
     import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
@@ -286,4 +286,4 @@ for seq in tqdm(seqs):
             
         write_lines(label_fpath, lines)     
 
-# gen_data_path(path="/share/wuweijia/Data/VideoText/MOTR/ICDAR2015")
+gen_data_path(path="/share/wuweijia/Data/VideoText/MOTR/ICDAR2015")
