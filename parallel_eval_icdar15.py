@@ -115,7 +115,6 @@ class StorageDictionary(object):
     
 def Generate_Json_annotation(TL_Cluster_Video_dict, Outpu_dir, xml_dir_):
     '''   '''
-    ICDAR21_DetectionTracks = {}
     text_id = 1
     
     doc = Document()
@@ -128,10 +127,7 @@ def Generate_Json_annotation(TL_Cluster_Video_dict, Outpu_dir, xml_dir_):
         aperson.setAttribute("ID", str(frame))
         video_xml.appendChild(aperson)
 
-        ICDAR21_DetectionTracks[frame] = []
         for text_list in TL_Cluster_Video_dict[frame]:
-
-            ICDAR21_DetectionTracks[frame].append({"points":text_list[:8],"ID":text_list[8],"transcription":text_list[9]})
             # xml
             object1 = doc.createElement("object")
             object1.setAttribute("ID", str(text_list[8]))
@@ -145,8 +141,6 @@ def Generate_Json_annotation(TL_Cluster_Video_dict, Outpu_dir, xml_dir_):
                 # personname = doc.createTextNode("1")
                 name.setAttribute("x", str(int(text_list[i*2])))
                 name.setAttribute("y", str(int(text_list[i*2+1])))
-                
-    StorageDictionary.dict2file_json(Outpu_dir, ICDAR21_DetectionTracks)
     
     # xml
     f = open(xml_dir_, "w")
