@@ -33,7 +33,6 @@ def extract_frame_from_video(video_path, video_frame_save_dir ):
 
     
     video_object = cv2.VideoCapture(video_path)
-    video = VideoFileClip(video_path)
     fps = video_object.get(cv2.CAP_PROP_FPS)
 
     frame_index = 1
