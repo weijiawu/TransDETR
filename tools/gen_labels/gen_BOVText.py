@@ -171,7 +171,7 @@ def getBboxesAndLabels_icd13(height, width, annotations):
 
     if bboxes:
         
-        bboxes_box = np.array(bboxes, dtype=np.float32)
+        bboxes_box = np.array(bboxes_box, dtype=np.float32)
         bboxes = np.array(bboxes, dtype=np.float32)
         # filter the coordinates that overlap the image boundaries.
         bboxes_box[:, 0::2] = np.clip(bboxes_box[:, 0::2], 0, width - 1)
