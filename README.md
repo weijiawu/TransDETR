@@ -186,7 +186,7 @@ sh configs/r50_TransDETR_train_DSText.sh
 You can download the pretrained model of TransDETR (the link is in "Main Results" session), then run following command to evaluate it on ICDAR2015 dataset:
 
 ```bash 
-sh configs/r50_TransDETR_eval.sh
+sh configs/r50_TransDETR_eval_ICDAR2015.sh
 
 ```
 evaluate on ICDAR13
