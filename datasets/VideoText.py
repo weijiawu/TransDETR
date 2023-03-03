@@ -225,6 +225,7 @@ class DetMOTDetection:
                         print(text)
 
                     word = text[-1]
+                    word = re.sub(u"([^\u4e00-\u9fa5\u0030-\u0039\u0041-\u005a\u0061-\u007a])","",word.upper())
                     gt_word = np.full((self.max_word_len,), self.char2id['PAD'], dtype=np.int)
                     for j, char in enumerate(word):
                         if j > self.max_word_len - 1:
