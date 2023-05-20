@@ -191,7 +191,7 @@ sh configs/r50_TransDETR_eval_ICDAR2015.sh
 ```
 evaluate on ICDAR13
 ```
-python tools/Evaluation_ICDAR13/evaluation.py
+python tools/Evaluation_ICDAR13/evaluation.py --groundtruths "./tools/Evaluation_ICDAR13/gt" --tests "./exps/e2e_TransVTS_r50_ICDAR15/jons"
 
 ```
 evaluate on ICDAR15
