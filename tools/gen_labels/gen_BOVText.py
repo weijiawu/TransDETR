@@ -171,7 +171,7 @@ def getBboxesAndLabels_icd13(height, width, annotations):
 
     if bboxes:
         
-        bboxes_box = np.array(bboxes_box, dtype=np.float32)
+        bboxes_box = np.array(bboxes, dtype=np.float32)
         bboxes = np.array(bboxes, dtype=np.float32)
         # filter the coordinates that overlap the image boundaries.
         bboxes_box[:, 0::2] = np.clip(bboxes_box[:, 0::2], 0, width - 1)
@@ -200,10 +200,6 @@ def get_annotation(video_path):
     return annotation
 
 def parse_xml(annotation_path,image_path):
-#     utf8_parser = ET.XMLParser(encoding='gbk')
-#     with open(annotation_path, 'r', encoding='gbk') as load_f:
-#         tree = ET.parse(load_f, parser=utf8_parser)
-#     root = tree.getroot()  # 获取树型结构的根
     
     bboxess, IDss, rotatess, wordss, orignial_bboxess = [], [] , [], [], []
     img = cv2.imread(image_path)
@@ -228,9 +224,21 @@ def mkdirs(d):
 
 def gen_data_path(path,split_train_test="train",data_path_str = "./datasets/data_path/BOVText.train"):
     
+    # filter annotation with repeat box
+    file_path = "./check.txt"  # 替换为您的文件路径
+
+    # 打开文件并按行读取内容
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+    check_list = []
+    for line in lines:
+        check_list.append(line.split("/")[-2]+"_"+line.split("/")[-1].replace("\n",""))
+    
+    print(check_list[:3])
+    
     image_path = path
     lines = []
-    for cls in tqdm(os.listdir(image_path)[:1]):
+    for cls in tqdm(os.listdir(image_path)):
         frame_path = os.path.join(image_path,cls)
         
         for frame_path_ in os.listdir(frame_path):
@@ -240,9 +248,13 @@ def gen_data_path(path,split_train_test="train",data_path_str = "./datasets/data
                 
                 if ".jpg" in frame_path_1:
                     frame_list.append(frame_path_)
+                    
             for i in range(1,len(frame_list)+1):
                 frame_real_path = path + cls + "/" + frame_path_ + "/{}.jpg".format(i) + "\n"
                 label_path = "/share/wuweijia/Data/VideoText/MOTR/BOVText/labels_with_ids/train/" + cls + "/" + frame_path_ + "/{}.txt".format(i)
+                if frame_path_ + "_{}.jpg".format(i) in check_list:
+                    continue
+                    
                 if osp.isfile(label_path):
                     lines.append(frame_real_path)
     write_lines(data_path_str, lines)  
@@ -262,48 +274,48 @@ for cls in os.listdir(seq_root):
 
 tid_curr = 0
 tid_last = -1
-for seq in tqdm(seqs):
-    image_path_frame = osp.join(seq_root,seq)
-    seq_label_root = osp.join(label_root, seq)
-    mkdirs(seq_label_root)
+# for seq in tqdm(seqs):
+#     image_path_frame = osp.join(seq_root,seq)
+#     seq_label_root = osp.join(label_root, seq)
+#     mkdirs(seq_label_root)
     
-    ann_path = os.path.join(from_label_root, seq + ".json")
-    bboxess, IDss, rotatess, wordss,orignial_bboxess = parse_xml(ann_path,osp.join(image_path_frame,"{}.jpg".format(1)))
+#     ann_path = os.path.join(from_label_root, seq + ".json")
+#     bboxess, IDss, rotatess, wordss,orignial_bboxess = parse_xml(ann_path,osp.join(image_path_frame,"{}.jpg".format(1)))
     
-    ID_list = {}
+#     ID_list = {}
     
-    for i in range(len(IDss)):
-        frame_id = i + 1
-        label_fpath = osp.join(seq_label_root, '{}.txt'.format(frame_id))
-        frame_path_one = osp.join(image_path_frame,"{}.jpg".format(frame_id))
-        img = cv2.imread(frame_path_one)
-        seq_height, seq_width = img.shape[:2]
+#     for i in range(len(IDss)):
+#         frame_id = i + 1
+#         label_fpath = osp.join(seq_label_root, '{}.txt'.format(frame_id))
+#         frame_path_one = osp.join(image_path_frame,"{}.jpg".format(frame_id))
+#         img = cv2.imread(frame_path_one)
+#         seq_height, seq_width = img.shape[:2]
         
-        lines = []
-        if IDss[i] == []:
-            with open(label_fpath, 'w') as f:
-                pass
-                continue
-#                 f.write(label_str)
-        for bboxes,IDs,rotates,word, orignial_bboxes in zip(bboxess[i],IDss[i],rotatess[i], wordss[i], orignial_bboxess[i]):
-            track_id = int(IDs)            
-            x, y, w, h = bboxes
+#         lines = []
+#         if IDss[i] == []:
+#             with open(label_fpath, 'w') as f:
+#                 pass
+#                 continue
+# #                 f.write(label_str)
+#         for bboxes,IDs,rotates,word, orignial_bboxes in zip(bboxess[i],IDss[i],rotatess[i], wordss[i], orignial_bboxess[i]):
+#             track_id = int(IDs)            
+#             x, y, w, h = bboxes
             
-            if track_id not in ID_list:
-                tid_curr += 1
-                ID_list[track_id] = tid_curr
-                real_id = tid_curr
-            else:
-                real_id = ID_list[track_id]
-            x += w / 2
-            y += h / 2
-#             label_fpath = osp.join(seq_label_root, '{}.txt'.format(frame_id))
+#             if track_id not in ID_list:
+#                 tid_curr += 1
+#                 ID_list[track_id] = tid_curr
+#                 real_id = tid_curr
+#             else:
+#                 real_id = ID_list[track_id]
+#             x += w / 2
+#             y += h / 2
+# #             label_fpath = osp.join(seq_label_root, '{}.txt'.format(frame_id))
             
-            x1, y1, w1, h1 = orignial_bboxes
-            label_str = '0 {:d} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.1f} {:.1f} {:.1f} {:.1f} {}\n'.format(
-            real_id, x / seq_width, y / seq_height, w / seq_width, h / seq_height,rotates, x1, y1, x1 + w1, y1 + h1, word)
-            lines.append(label_str)
+#             x1, y1, w1, h1 = orignial_bboxes
+#             label_str = '0 {:d} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.1f} {:.1f} {:.1f} {:.1f} {}\n'.format(
+#             real_id, x / seq_width, y / seq_height, w / seq_width, h / seq_height,rotates, x1, y1, x1 + w1, y1 + h1, word)
+#             lines.append(label_str)
             
-        write_lines(label_fpath, lines)     
+#         write_lines(label_fpath, lines)     
 
-# gen_data_path(path="/share/wuweijia/MyBenchMark/MMVText/BOVTextV2/Train/Frames/")
+gen_data_path(path="/share/wuweijia/MyBenchMark/MMVText/BOVTextV2/Train/Frames/")

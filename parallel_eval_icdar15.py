@@ -26,7 +26,7 @@ from __future__ import print_function
 from PIL import Image, ImageDraw, ImageFont
 import os
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 import numpy as np
 import random
 import argparse
@@ -104,6 +104,7 @@ class StorageDictionary(object):
     def dict2file_json(file_name, data_dict):
         import json, io
         with io.open(file_name, 'w', encoding='utf-8') as fp:
+            # fp.write(unicode(json.dumps(data_dict, ensure_ascii=False, indent=4) ) )  #可以解决在文件里显示中文的问题，不加的话是 '\uxxxx\uxxxx'
             fp.write((json.dumps(data_dict, ensure_ascii=False, indent=4) ) )
             
     @staticmethod
@@ -115,6 +116,7 @@ class StorageDictionary(object):
     
 def Generate_Json_annotation(TL_Cluster_Video_dict, Outpu_dir, xml_dir_):
     '''   '''
+    ICDAR21_DetectionTracks = {}
     text_id = 1
     
     doc = Document()
@@ -127,11 +129,18 @@ def Generate_Json_annotation(TL_Cluster_Video_dict, Outpu_dir, xml_dir_):
         aperson.setAttribute("ID", str(frame))
         video_xml.appendChild(aperson)
 
+        ICDAR21_DetectionTracks[frame] = []
         for text_list in TL_Cluster_Video_dict[frame]:
+#             ICDAR21_DetectionTracks[frame].append({"points":text_list[:8],"ID":text_list[8],"transcription":text_list[9],
+#                                                   "score":str(text_list[10]),
+#                                                   "roi_feature":text_list[11]})
+            ICDAR21_DetectionTracks[frame].append({"points":text_list[:8],"ID":text_list[8],"transcription":text_list[9]
+                                                })
             # xml
             object1 = doc.createElement("object")
             object1.setAttribute("ID", str(text_list[8]))
             object1.setAttribute("Transcription", str(text_list[9]))
+#             object1.setAttribute("score", str(text_list[10]))
             aperson.appendChild(object1)
             
             for i in range(4):
@@ -141,6 +150,8 @@ def Generate_Json_annotation(TL_Cluster_Video_dict, Outpu_dir, xml_dir_):
                 # personname = doc.createTextNode("1")
                 name.setAttribute("x", str(int(text_list[i*2])))
                 name.setAttribute("y", str(int(text_list[i*2+1])))
+                
+    StorageDictionary.dict2file_json(Outpu_dir, ICDAR21_DetectionTracks)
     
     # xml
     f = open(xml_dir_, "w")
@@ -149,7 +160,8 @@ def Generate_Json_annotation(TL_Cluster_Video_dict, Outpu_dir, xml_dir_):
     
 def is_chinese(string):
     """
-    :param string:
+    check is chinese
+    :param string: 
     :return: bool
     """
     for ch in string:
@@ -173,8 +185,9 @@ def cv2AddChineseText(image, text, position, textColor=(0, 0, 0), textSize=30):
     image,rgb = mask_image_bg(image, mask_1, rgb = [0,0,0])
     
     
-    if (isinstance(image, np.ndarray)):
+    if (isinstance(image, np.ndarray)):  
         image = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+
     draw = ImageDraw.Draw(image)
 
     fontStyle = ImageFont.truetype(
@@ -189,11 +202,8 @@ def cv2AddChineseText(image, text, position, textColor=(0, 0, 0), textSize=30):
 def mask_image_bg(image, mask_2d, rgb=None, valid = False):
     h, w = mask_2d.shape
 
-    # mask_3d = np.ones((h, w), dtype="uint8") * 255
     mask_3d_color = np.zeros((h, w, 3), dtype="uint8")
-    # mask_3d[mask_2d[:, :] == 1] = 0
     
-        
     image.astype("uint8")
     mask = (mask_2d!=0).astype(bool)
     if rgb is None:
@@ -215,11 +225,8 @@ def mask_image_bg(image, mask_2d, rgb=None, valid = False):
 def mask_image(image, mask_2d, rgb=None, valid = False):
     h, w = mask_2d.shape
 
-    # mask_3d = np.ones((h, w), dtype="uint8") * 255
     mask_3d_color = np.zeros((h, w, 3), dtype="uint8")
-    # mask_3d[mask_2d[:, :] == 1] = 0
     
-        
     image.astype("uint8")
     mask = (mask_2d!=0).astype(bool)
     if rgb is None:
@@ -279,7 +286,6 @@ def draw_bboxes(ori_img, bbox, words, scores, identities=None, offset=(0, 0), cv
         r,g,b = int(r),int(g),int(b)
         cv2.polylines(img, [points], True, (r,g,b), thickness=4)
 #         img=cv2AddChineseText(img,str(ID), (int(x1), int(y1) - 20),((0,0,255)), 45)
-#         print(word)
         short_side = min(img.shape[0],img.shape[1])
         text_size = int(short_side * 0.03)
         
@@ -392,8 +398,10 @@ def filter_pub_det(res_file, pub_det_file, filter_iou=False):
         lines = list(f.readlines())
     with open(res_file, 'w') as f:
         for line in lines:
+            
             if len(line) == 0:
                 continue
+                
             elements = line.strip().split(',')
             frame_id, obj_id = elements[:2]
             frame_id = int(frame_id)
@@ -439,14 +447,15 @@ def load_img_from_file(f_path):
     label_path = f_path.replace('images', 'labels_with_ids').replace('.png', '.txt').replace('.jpg', '.txt')
     cur_img = cv2.imread(f_path)
     cur_img = cv2.cvtColor(cur_img, cv2.COLOR_BGR2RGB)
-    return cur_img
+    
+    targets = load_label(label_path, cur_img.shape[:2]) if os.path.exists(label_path) else None
+    return cur_img, targets
     
 class Detector(object):
     def __init__(self, args, model=None, seq_num=2):
         
         
         self.args = args
-#         self.detr = model.cuda()
         self.detr = model
 
         self.seq_num = seq_num
@@ -455,29 +464,35 @@ class Detector(object):
         
         if "YVT" in args.data_txt_path_val:
             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, '{}f{}.jpg'.format(self.seq_num,str(_).zfill(4))) for _ in range(0,len(img_list))]
+            #rec  CHINESE  LOWERCASE
+            voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
         elif "minetto" in args.data_txt_path_val:
             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, '{}.jpg'.format(str(_).zfill(6))) for _ in range(0,len(img_list))]
+            voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
         elif "BOVText" in args.data_txt_path_val:
             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, "{}.jpg".format(_)) for _ in range(1,len(img_list)+1)]
+            voc, char2id, id2char = get_vocabulary('CHINESE', use_ctc=True)
         elif "TextVR" in args.data_txt_path_val:
             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, "{}".format(_).zfill(8)+".jpg") for _ in range(0,len(img_list))]
+            voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
         elif "DSText" in args.data_txt_path_val:
             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, "{}.jpg".format(_)) for _ in range(1,len(img_list)+1)]
+            voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
         else:
             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, "{}.jpg".format(_)) for _ in range(1,len(img_list)+1)]
-#             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, "{}.jpg".format(_)) for _ in range(100,133)]
-        
+            voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
+
         
         try:
             self.ann = self.get_annotation("./tools/Evaluation_ICDAR13/gt/{}_GT.json".format(self.seq_num))
         except:
             self.ann = None
-#         self.img_list = sorted(img_list)
+
         self.img_len = len(self.img_list)
         self.tr_tracker = MOTR()
         
-        #rec 配置  CHINESE  LOWERCASE
-        voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
+        
+        
         # 解码使用
         self.char2id = char2id
         self.id2char = id2char
@@ -488,6 +503,13 @@ class Detector(object):
         '''
         self.img_height = 800
         self.img_width = 1536
+        
+        # BOVText
+        self.img_height = 640
+        self.img_width = 1536
+        
+
+        
         self.mean = [0.485, 0.456, 0.406]
         self.std = [0.229, 0.224, 0.225]
 
@@ -495,7 +517,7 @@ class Detector(object):
         os.makedirs(self.save_path, exist_ok=True)
         
         
-        predict_path = os.path.join(self.args.output_dir, 'preds')
+        predict_path = os.path.join(self.args.output_dir, 'preds_3')
         os.makedirs(predict_path, exist_ok=True)
         
         if "minetto" in args.data_txt_path_val:
@@ -503,6 +525,13 @@ class Detector(object):
         elif "BOVText" in args.data_txt_path_val:
             self.seq_num = self.seq_num.replace("/","_")
             xml_name = self.seq_num
+            
+            self.predict_path = os.path.join(predict_path,"res_{}.xml".format(xml_name))
+            
+            json_path = os.path.join(self.args.output_dir, 'jons_3')
+            os.makedirs(json_path, exist_ok=True)
+            self.json_path = os.path.join(json_path,"{}.json".format(self.seq_num.split("/")[-1]))
+            
         elif "DSText" in args.data_txt_path_val:
             xml_name = self.seq_num.split("/")[-1]
             self.predict_path = os.path.join(predict_path,"res_{}.xml".format(xml_name))
@@ -519,10 +548,6 @@ class Detector(object):
             os.makedirs(json_path, exist_ok=True)
             self.json_path = os.path.join(json_path,"{}.json".format(self.seq_num))
 
-        
-
-        
-        
         
     def get_annotation(self,video_path):
         annotation = {}
@@ -559,8 +584,6 @@ class Detector(object):
         wh = dt_instances.boxes[:, 2:4] - dt_instances.boxes[:, 0:2]
         areas = wh[:, 0] * wh[:, 1]
         keep = areas > area_threshold
-#         print(keep)
-#         print(dt_instances)
         dt_instances = dt_instances[keep]
         
         return dt_instances
@@ -619,14 +642,17 @@ class Detector(object):
                     c_word_score += word_preds_max_prob[i]
                     num_chars += 1
                     if (not (i > 0 and t[i - 1].item() == t[i].item())):  # removing repeated characters and blank.
-                        s += self.id2char[t[i].item()]
-#             if c_word_score/(num_chars+0.000001) < filter_word_score:
-#                 s = "###"
+                        s += self.id2char[t[i].item()]  
+
             word_scores.append(c_word_score/(num_chars+0.000001))
             words.append(s)
         
         
         dt_instances.word = words
+#         word_scores = torch.as_tensor(np.array(word_scores))
+#         dt_instances.word_max_prob = word_scores
+#         keep = dt_instances.scores>filter_word_score
+#         dt_instances = dt_instances[keep]
 
 
         boxes = []
@@ -662,8 +688,13 @@ class Detector(object):
             "memory_embed_time" : 0,
              "postprocess_time": 0 
             }
+        
+#         if os.path.exists(self.json_path):
+#             return time_cost
+        
         for i in tqdm(range(0, self.img_len)):
-            img = load_img_from_file(self.img_list[i])
+            img, targets = load_img_from_file(self.img_list[i])
+            
             cur_img, ori_img = self.init_img(img)
 
             # track_instances = None
@@ -679,7 +710,23 @@ class Detector(object):
             
             res,time_cost_frame = self.detr.inference_single_image(cur_img.cuda().float(), (self.seq_h, self.seq_w), track_instances)
             
-
+#             time_cost["backbone_time"]+= time_cost_frame["backbone_time"]
+#             time_cost["nect_time"]+= time_cost_frame["nect_time"]
+#             time_cost["upsample_time"]+= time_cost_frame["upsample_time"]
+#             time_cost["det_head_time"]+= time_cost_frame["det_head_time"]
+#             time_cost["transformer_time"]+= time_cost_frame["transformer_time"]
+#             time_cost["rec_head_time"]+= time_cost_frame["rec_head_time"]
+#             time_cost["memory_embed_time"]+= time_cost_frame["memory_embed_time"]
+#             time_cost["postprocess_time"]+= time_cost_frame["postprocess_time"]
+            
+#             dict_one_cost["backbone_time"]+= time_cost_frame["backbone_time"]
+#             dict_one_cost["nect_time"]+= time_cost_frame["nect_time"]
+#             dict_one_cost["upsample_time"]+= time_cost_frame["upsample_time"]
+#             dict_one_cost["det_head_time"]+= time_cost_frame["det_head_time"]
+#             dict_one_cost["transformer_time"]+= time_cost_frame["transformer_time"]
+#             dict_one_cost["rec_head_time"]+= time_cost_frame["rec_head_time"]
+#             dict_one_cost["memory_embed_time"]+= time_cost_frame["memory_embed_time"]
+#             dict_one_cost["postprocess_time"]+= time_cost_frame["postprocess_time"]
             
             
             track_instances = res['track_instances']
@@ -699,21 +746,26 @@ class Detector(object):
             total_dts += len(dt_instances)
 
             if vis:
+                # for visual
                 cur_vis_img_path = os.path.join(self.save_path, '{}.jpg'.format(i))
                 if self.ann == None:
                     gt_boxes = None
                 else:
                     gt_boxes = self.ann[str(i+1)]
-
                 self.visualize_img_with_bbox(cur_vis_img_path, ori_img, dt_instances, ref_pts=all_ref_pts, gt_boxes=gt_boxes,rgbs=rgbs)
 
             boxes,IDs,scores,words = dt_instances.boxes, dt_instances.obj_idxes, dt_instances.scores, dt_instances.word
-            
+            roi_features = dt_instances.roi
             lines = []
-            for box,ID,score,word in zip(boxes,IDs,scores,words):
+            for box,ID,score,word,roi_feature in zip(boxes,IDs,scores,words,roi_features):
                 score =score.item()
+                roi_feature = np.array(roi_feature).tolist()
                 x1, y1, x2, y2, x3, y3, x4, y4 = [int(i) for i in box[:8]]
-                lines.append([x1, y1, x2, y2, x3, y3, x4, y4,int(ID),word,score])
+                
+                if score<0.83 and self.seq_num=="Cls6_NewsReport_Cls6_NewsReport_video76":
+                    continue
+                    
+                lines.append([x1, y1, x2, y2, x3, y3, x4, y4,int(ID),word,score,roi_feature])
             
     
             annotation.update({str(i+1):lines})  
@@ -742,11 +794,10 @@ def getBboxesAndLabels_icd131(annotations):
 
         points = np.array(object_boxes).reshape((-1))
         points = cv2.minAreaRect(points.reshape((4, 2)))
-        # 获取矩形四个顶点，浮点型
         points = cv2.boxPoints(points).reshape((-1))         
         IDs.append(annotation.attrib["ID"])
         Transcriptions.append(annotation.attrib["Transcription"])
-#         confidences.append(annotation.attrib["confidence"])
+#         confidences.append(annotation.attrib["score"])
         confidences.append(1)
         bboxes.append(points)
 
@@ -763,35 +814,31 @@ def getBboxesAndLabels_icd131(annotations):
 
 def parse_xml_rec(annotation_path):
     utf8_parser = ET.XMLParser(encoding='gbk')
-#     print(annotation_path)
     with open(annotation_path, 'r', encoding='gbk') as load_f:
         tree = ET.parse(load_f, parser=utf8_parser)
-    root = tree.getroot()  # 获取树型结构的根
+    root = tree.getroot()  
     
     ann_dict = {}
     for idx,child in enumerate(root):
-#         image_path = os.path.join(video_path, child.attrib["ID"] + ".jpg")
-
         bboxes, IDs, Transcriptions, confidences = \
             getBboxesAndLabels_icd131(child)
         ann_dict[child.attrib["ID"]] = [bboxes,IDs,Transcriptions,confidences]
     return ann_dict
 
-# 对字典按key排序, 默认升序, 返回 OrderedDict
+# OrderedDict
 def sort_key(old_dict, reverse=False):
-    """对字典按key排序, 默认升序, 不修改原先字典"""
-    # 先获得排序后的key列表
     keys = [int(i) for i in old_dict.keys()]
     keys = sorted(keys, reverse=reverse)
-    # 创建一个新的空字典
+
     new_dict = OrderedDict()
-    # 遍历 key 列表
+
     for key in keys:
         new_dict[str(key)] = old_dict[str(key)]
     return new_dict
 
 def getid_text(new_xml_dir_):
     
+    voc_dict = {"res_video_11.xml": "Video_11_4_1_GT_voc.txt", "res_video_15.xml": "Video_15_4_1_GT_voc.txt", "res_video_17.xml": "Video_17_3_1_GT_voc.txt", "res_video_1.xml": "Video_1_1_2_GT_voc.txt", "res_video_20.xml": "Video_20_5_1_GT_voc.txt", "res_video_22.xml": "Video_22_5_1_GT_voc.txt", "res_video_23.xml": "Video_23_5_2_GT_voc.txt", "res_video_24.xml": "Video_24_5_2_GT_voc.txt", "res_video_30.xml": "Video_30_2_3_GT_voc.txt", "res_video_32.xml": "Video_32_2_3_GT_voc.txt", "res_video_34.xml": "Video_34_2_3_GT_voc.txt", "res_video_35.xml": "Video_35_2_3_GT_voc.txt", "res_video_38.xml": "Video_38_2_3_GT_voc.txt", "res_video_39.xml": "Video_39_2_3_GT_voc.txt", "res_video_43.xml": "Video_43_6_4_GT_voc.txt", "res_video_44.xml": "Video_44_6_4_GT_voc.txt", "res_video_48.xml": "Video_48_6_4_GT_voc.txt", "res_video_49.xml": "Video_49_6_4_GT_voc.txt", "res_video_50.xml": "Video_50_7_4_GT_voc.txt", "res_video_53.xml": "Video_53_7_4_GT_voc.txt", "res_video_55.xml": "Video_55_3_2_GT_voc.txt", "res_video_5.xml": "Video_5_3_2_GT_voc.txt", "res_video_6.xml": "Video_6_3_2_GT_voc.txt", "res_video_9.xml": "Video_9_1_1_GT_voc.txt"}
     
     for xml in tqdm(os.listdir(new_xml_dir_)):
         id_trans = {}
@@ -814,12 +861,19 @@ def getid_text(new_xml_dir_):
                     
         id_trans = sort_key(id_trans)
         id_cond = sort_key(id_cond)
-#         print(xml)
+
         for i in id_trans:
             txts = id_trans[i]
             confidences = id_cond[i]
             txt = max(txts,key=txts.count)
             
+#             sco = 0
+#             txt = txts[0]
+#             for txt1,confident in zip(txts,confidences):
+#                 if confident>sco:
+#                     sco = confident
+#                     txt = txt1
+                    
             lines.append('"'+i+'"'+","+'"'+txt+'"'+"\n")
         write_lines(os.path.join(new_xml_dir_,xml.replace("xml","txt")),lines)
 
@@ -834,16 +888,13 @@ def sub_processor(pid, args, video_list):
     detr.eval()
     
     text = 'processor %d' % pid
-
+    
+    
     # 1. For each video
     for video in video_list:
+        print(video)
         det = Detector(args, model=detr, seq_num=video)
         time_cost = det.detect()
-#         with lock:
-#             progress.update(1)
-    
-#     with lock:
-#          progress.close()
        
     return 0
 
@@ -866,7 +917,11 @@ if __name__ == '__main__':
         for seq in os.listdir(args.mot_path):
             for video_name in os.listdir(os.path.join(args.mot_path,seq)):
                 seq_nums.append(os.path.join(seq,video_name))
-
+        
+    elif "TextVR" in args.data_txt_path_val:  
+        args.mot_path = "/share/mmu-ocr/datasets/zyz_anns/frozen-in-time-ocr/cache/vitvr"
+        seq_nums = os.listdir(args.mot_path)
+        
     elif "YVT" in args.data_txt_path_val:  
         args.mot_path = os.path.join(args.mot_path,"YVT/images/test")
         seq_nums = os.listdir(args.mot_path)
@@ -876,10 +931,50 @@ if __name__ == '__main__':
         seq_nums = os.listdir(args.mot_path)
         
     elif "BOVText" in args.data_txt_path_val:  
-        args.mot_path = "./BOVTextV2/Test/Frames"
+        args.mot_path = "/share/wuweijia/MyBenchMark/MMVText/BOVTextV2/Test/Frames"
         seq_nums = []
         for seq in os.listdir(args.mot_path):
             for video_name in os.listdir(os.path.join(args.mot_path,seq)):
+                
+                selected_file = [
+#                     "Cls27_Education_Cls27_Education_video56"
+                "Cls16_Government_Cls16_Government_video15",
+                    "Cls1_Livestreaming_Cls1_Livestreaming_video39",
+                    "Cls24_Fishery_Cls24_Fishery_video79",
+                    "Cls24_Fishery_Cls24_Fishery_video75",
+                    "Cls13_Introduction_Cls13_Introduction_video30",
+                    "Cls7_Game_Cls7_Game_video10",
+                    "Cls14_Talent_Cls14_Talent_video27",
+                    "Cls14_Talent_Cls14_Talent_video44",
+                    "Cls14_Talent_Cls14_Talent_video55",
+                    "Cls14_Talent_Cls14_Talent_video46",
+                    "Cls26_Technology_Cls26_Technology_video1",
+                    
+                    
+                    "Cls20_Campus_Cls20_Campus_video7",
+                "Cls6_NewsReport_Cls6_NewsReport_video76",
+                "Cls16_Government_Cls16_Government_video15",
+                "Cls3_Sports_Cls3_Sports_video47.json",
+                "Cls28_BeautyIndustry_Cls28_BeautyIndustry_video36",
+                "Cls6_NewsReport_Cls6_NewsReport_video26",
+                "Cls23_International_Cls23_International_video26",
+                "Cls17_Speech_Cls17_Speech_video12",
+                "Cls17_Speech_Cls17_Speech_video53"
+
+                ]
+                
+                # fp高
+#                 selected_file = [
+# #                  "Cls6_NewsReport_Cls6_NewsReport_video76"
+# #                   ,
+#                     "Cls26_Technology_Cls26_Technology_video1"
+#                 ]
+                print(seq+"_"+video_name)
+                
+                if seq+"_"+video_name not in selected_file:
+                    continue 
+                    
+                    
                 seq_nums.append(os.path.join(seq,video_name))
     else:
         raise NotImplementedError()
@@ -903,11 +998,10 @@ if __name__ == '__main__':
 
     result_dict = mp.Manager().dict()
     mp = mp.get_context("spawn")
-    thread_num = 8   
+    thread_num = args.thread_num   
     processes = []
     per_thread_video_num = int(len(seq_nums)/thread_num)
-    
-#     lock = threading.Lock()
+
     print('Start inference')
     for i in range(thread_num):
         if i == thread_num - 1:
@@ -923,9 +1017,11 @@ if __name__ == '__main__':
     for p in processes:
         p.join()
         
-    result_dict = dict(result_dict)
+    result_dict = dict(result_dict)    
+    
 
-    getid_text(os.path.join(args.output_dir, 'preds'))
-    print(dict_cost)
+    if "ICDAR15" in args.data_txt_path_val:
+        getid_text(os.path.join(args.output_dir, 'preds_3'))
+        print(dict_cost)
     
 

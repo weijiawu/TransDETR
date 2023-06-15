@@ -30,7 +30,7 @@ import mmcv
 import math
 from PIL import Image, ImageDraw, ImageFont
 from util.box_ops import box_cxcywh_to_xyxy
-
+from random import choice
 
 def cv2AddChineseText(image, text, position, textColor=(0, 0, 0), textSize=30):
     
@@ -45,14 +45,18 @@ def cv2AddChineseText(image, text, position, textColor=(0, 0, 0), textSize=30):
     image,rgb = mask_image(image, mask_1,[255,255,255])
     
     
-    if (isinstance(image, np.ndarray)):
+    if (isinstance(image, np.ndarray)):  # 判断是否OpenCV图片类型
         image = Image.fromarray(cv2.cvtColor(np.uint8(image.astype(np.float32)), cv2.COLOR_BGR2RGB))
+    # 创建一个可以在给定图像上绘图的对象
     draw = ImageDraw.Draw(image)
+    # 字体的格式
     fontStyle = ImageFont.truetype(
         "./tools/simsun.ttc", textSize, encoding="utf-8")
+    # 绘制文本
     draw.text(position, text, textColor, font=fontStyle)
     
     image = cv2.cvtColor(np.asarray(image), cv2.COLOR_RGB2BGR)
+    # 转换回OpenCV格式
                     
     return image
 
@@ -74,7 +78,7 @@ def mask_image(image, mask_2d, rgb=None, valid = False):
     
     if valid:
         mask_3d_color[mask_2d[:, :] == 1] = [[0,0,0]]
-        kernel = np.ones((5,5),np.uint8)
+        kernel = np.ones((5,5),np.uint8)  
         mask_2d = cv2.dilate(mask_2d,kernel,iterations = 4)
         mask = (mask_2d!=0).astype(bool)
         image[mask] = image[mask] * 0 + mask_3d_color[mask] * 1
@@ -84,8 +88,8 @@ def mask_image(image, mask_2d, rgb=None, valid = False):
 
 
 def get_rotate_mat(theta):
-    '''positive theta value means rotate clockwise'''
-    return np.array([[math.cos(theta), -math.sin(theta)], [math.sin(theta), math.cos(theta)]])
+	'''positive theta value means rotate clockwise'''
+	return np.array([[math.cos(theta), -math.sin(theta)], [math.sin(theta), math.cos(theta)]])
 
 
 class DetMOTDetection:
@@ -104,19 +108,38 @@ class DetMOTDetection:
             
             self.img_files = list(filter(lambda x: len(x) > 0, self.img_files))
         self.img_files = self.img_files[:int(len(self.img_files))]
-#         print(data_txt_path)
+    
+        self.use_ctc = True
+        
         if "BOVText" in data_txt_path:
             self.label_files = [(("/share/wuweijia/Data/VideoText/MOTR/BOVText/labels_with_ids/train" + x.split("/Frames")[1]).replace('.png', '.txt').replace('.jpg', '.txt'))
                             for x in self.img_files]
-        if "VideoSynthText" in data_txt_path:
+            
+            # recognition  CHINESE LOWERCASE
+            self.voc, self.char2id, self.id2char = get_vocabulary('CHINESE', use_ctc=self.use_ctc)
+        elif "Synthetic_Chinese_OCR" in data_txt_path:
+            self.label_files = [(x.replace('images/train', 'labels_with_ids/train').replace('.png', '.txt').replace('.jpg', '.txt'))
+                            for x in self.img_files]
+            # recognition  CHINESE LOWERCASE
+            self.voc, self.char2id, self.id2char = get_vocabulary('CHINESE', use_ctc=self.use_ctc)
+        
+        elif "VideoSynthText" in data_txt_path:
             self.label_files = [(x.replace('images', 'labels_with_ids').replace('.png', '.txt').replace('.jpg', '.txt'))
                             for x in self.img_files]
+            # recognition  CHINESE LOWERCASE
+            self.voc, self.char2id, self.id2char = get_vocabulary('LOWERCASE', use_ctc=self.use_ctc)
+            
         elif "SynthText" in data_txt_path:
             self.label_files = [(("/mmu-ocr/weijiawu/Data/VideoText/MOTR/SynthText/labels_with_ids/train" + x.split("/SynthText")[1]).replace('.png', '.txt').replace('.jpg', '.txt')) if len(x.split("/SynthText"))>1 else (x.replace('images', 'labels_with_ids').replace('.png', '.txt').replace('.jpg', '.txt'))
                             for x in self.img_files]
+            # recognition  CHINESE LOWERCASE
+            self.voc, self.char2id, self.id2char = get_vocabulary('LOWERCASE', use_ctc=self.use_ctc)
+            
         else:
-            self.label_files = [(x.replace('images', 'labels_with_ids').replace('.png', '.txt').replace('.jpg', '.txt'))
+            self.label_files = [(x.replace('images/train', 'labels_with_ids/train').replace('.png', '.txt').replace('.jpg', '.txt'))
                             for x in self.img_files]
+            # recognition  CHINESE LOWERCASE
+            self.voc, self.char2id, self.id2char = get_vocabulary('LOWERCASE', use_ctc=self.use_ctc)
         
         # The number of images per sample: 1 + (num_frames - 1) * interval.
         # The number of valid samples: num_images - num_image_per_sample + 1.
@@ -140,9 +163,7 @@ class DetMOTDetection:
             self.num_frames_per_batch = self.lengths[0]
             self.current_epoch = 0
         
-        # recognition  CHINESE LOWERCASE
-        self.use_ctc = True
-        self.voc, self.char2id, self.id2char = get_vocabulary('LOWERCASE', use_ctc=self.use_ctc)
+        
         self.max_word_num = 50
         self.max_word_len = 32
         
@@ -200,7 +221,6 @@ class DetMOTDetection:
             if size == 0:
                 labels = np.array([])
             else:
-#                 labels0 = np.loadtxt(label_path, dtype=np.float32).reshape(-1, 7)
                 labels0 = []
                 words = []
                 lines = mmcv.list_from_file(label_path)
@@ -215,18 +235,17 @@ class DetMOTDetection:
 
                     # recognition words
                     if "#" in text[-1]:
-#                         continue
                         texts_ignored.append(0)
                     else:
                         texts_ignored.append(1)
+                        
                     try:
                         labels0.append(list(map(float, text[:11])))
                     except:
                         print(text)
 
                     word = text[-1]
-                    word = re.sub(u"([^\u4e00-\u9fa5\u0030-\u0039\u0041-\u005a\u0061-\u007a])","",word.upper())
-                    word = word.upper()
+                    
                     gt_word = np.full((self.max_word_len,), self.char2id['PAD'], dtype=np.int)
                     for j, char in enumerate(word):
                         if j > self.max_word_len - 1:
@@ -235,6 +254,7 @@ class DetMOTDetection:
                             gt_word[j] = self.char2id[char]
                         else:
                             gt_word[j] = self.char2id['UNK']
+                            
                     if not self.use_ctc:
                         if len(word) > self.max_word_len - 1:
                             gt_word[-1] = self.char2id['EOS']
@@ -270,15 +290,15 @@ class DetMOTDetection:
         elif 'COCOTextV2' in img_path:
             targets['dataset'] = 'COCOTextV2'
         elif 'VideoSynthText' in img_path:
-            targets['dataset'] = 'VideoSynthText'
+            targets['dataset'] = 'VideoSynthText' 
         elif 'FlowTextV2' in img_path:
-            targets['dataset'] = 'FlowTextV2'
+            targets['dataset'] = 'FlowTextV2' 
         elif 'FlowText' in img_path:
             targets['dataset'] = 'FlowText'
         elif 'SynthText' in img_path:
-            targets['dataset'] = 'SynthText'
+            targets['dataset'] = 'SynthText'  
         elif 'VISD' in img_path:
-            targets['dataset'] = 'VISD'
+            targets['dataset'] = 'VISD' 
         elif 'YVT' in img_path:
             targets['dataset'] = 'YVT'
         elif 'UnrealText' in img_path:
@@ -289,8 +309,19 @@ class DetMOTDetection:
             targets['dataset'] = 'FlowImage'
         elif 'DSText' in img_path:
             targets['dataset'] = 'DSText'
+        elif 'Synthetic_Chinese_OCR' in img_path:    
+            targets['dataset'] = 'Synthetic_Chinese'
+            
+            # padding
+            scales = [608, 640, 672, 704, 736, 768, 800, 832, 864, 896, 928, 960, 992]
+            side = choice(scales)
+            new_img = Image.new(img.mode, (side, side), (0, 0, 0))
+            new_img.paste(img, (0, 0))
+            img = new_img
+            
         else:
             raise NotImplementedError()
+            
         targets['boxes'] = []
         targets['rotate'] = []
         targets['area'] = []
@@ -342,7 +373,6 @@ class DetMOTDetection:
         elif self.sample_mode == 'random_interval':
             sample_interval = np.random.randint(1, self.sample_interval + 1)
         default_range = start_idx, start_idx + (self.num_frames_per_batch - 1) * sample_interval + 1, sample_interval
-#         print(self.num_frames_per_batch)
         return default_range
 
     def pre_continuous_frames(self, start, end, interval=1):
@@ -355,6 +385,7 @@ class DetMOTDetection:
         return images, targets
 
     def __getitem__(self, idx):
+        
         sample_start, sample_end, sample_interval = self._get_sample_range(idx)
         
         images, targets = self.pre_continuous_frames(sample_start, sample_end, sample_interval)
@@ -372,8 +403,7 @@ class DetMOTDetection:
             image_icdxx = random.randint(1,100)
             for idx1,(img,ann) in enumerate(zip(images,targets)):
                 imge = img.permute(1,2,0)
-#                 print(imge.shape)
-               
+
                 imge = (imge.cpu().numpy()*[0.229, 0.224, 0.225]+[0.485, 0.456, 0.406])*255
                 h, w = imge.shape[:2]
                 label = ann["labels"]
@@ -405,8 +435,8 @@ class DetMOTDetection:
                         
                     short_side = min(imge.shape[0],imge.shape[1])
                     text_size = int(short_side * 0.05)
-#                     print(texts_ignored)
-#                     image=cv2AddChineseText(image,str(texts_ignored.cpu().numpy()), (int(res[0,0]), int(res[1,0]) - text_size),(0,255,255), text_size)
+#                     print(word)
+                    image=cv2AddChineseText(image,str(word.cpu().numpy()), (2, 100),(0,255,255), text_size)
 #                     image=cv2AddChineseText(image,str(obj_id.cpu().numpy())+str(texts_ignored.cpu().numpy()), (int(res[0,0]), int(res[1,0]) - text_size),(0,255,255), text_size)
 
                 cv2.imwrite("./exps/show/{}_{}.jpg".format(image_icdxx,idx1),image)
@@ -477,7 +507,6 @@ def make_transforms_for_BOVText(image_set, args=None):
 
     if image_set == 'train':
         return T.MotCompose([
-#             T.MotRandomHorizontalFlip(),
             T.MotRandomResize(scales, max_size=1536),
 #             T.MotRandomSelect(
 #                 T.MotRandomResize(scales, max_size=1536),
@@ -531,23 +560,51 @@ def make_transforms_for_crowdhuman(image_set, args=None):
 
     raise ValueError(f'unknown {image_set}')
 
+def make_transforms_for_synthetic_chinese(image_set, args=None):
 
+    normalize = T.MotCompose([
+        T.MotToTensor(),
+        T.MotNormalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    scales = [608, 640, 672, 704, 736, 768, 800]
+    if image_set == 'train':
+        return T.MotCompose([
+            T.MotRandomResize(scales, max_size=1536),
+            normalize,
+
+        ])
+
+    if image_set == 'val':
+        return T.MotCompose([
+            T.MotRandomResize([800], max_size=1333),
+            normalize,
+        ])
+
+    raise ValueError(f'unknown {image_set}')
+    
 def build_dataset2transform(args, image_set):
     mot17_train = make_transforms_for_mot17('train', args)
     mot17_test = make_transforms_for_mot17('val', args)
     BOVText_train = make_transforms_for_BOVText('train', args)
 
     crowdhuman_train = make_transforms_for_crowdhuman('train', args)
-    dataset2transform_train = {'ICDAR2015': mot17_train,'DSText': mot17_train,  'VideoSynthText':mot17_train, 'FlowText':mot17_train, 'FlowTextV2':mot17_train,
-                       'YVT': mot17_train,
-                       'BOVText': BOVText_train, 'SynthText': crowdhuman_train, 'UnrealText': crowdhuman_train,
-                       'COCOTextV2': crowdhuman_train, 'VISD': crowdhuman_train, 'FlowImage': crowdhuman_train,
-                        "ICDAR15_Pre": crowdhuman_train}
+    synthetic_chinese_train = make_transforms_for_synthetic_chinese('train', args)
     
-    dataset2transform_val = {'ICDAR2015': mot17_test,'DSText': mot17_test, 'VideoSynthText':mot17_test, 'FlowText':mot17_test, 'YVT': mot17_test,
-                     'FlowTextV2':mot17_test,
-                     'BOVText': mot17_test, 'SynthText': mot17_test, 'UnrealText': mot17_test,
-                     'COCOTextV2': mot17_test,'VISD': mot17_test,'FlowImage': mot17_test,"ICDAR15_Pre": crowdhuman_train}
+    dataset2transform_train = {'ICDAR2015': mot17_train,'DSText': mot17_train,  'VideoSynthText':mot17_train, 
+                               'FlowText':mot17_train, 'FlowTextV2':mot17_train,
+                               'YVT': mot17_train, 
+                               'BOVText': BOVText_train, 'SynthText': crowdhuman_train, 'UnrealText': crowdhuman_train, 
+                               'COCOTextV2': crowdhuman_train, 'VISD': crowdhuman_train, 'FlowImage': crowdhuman_train,
+                                "ICDAR15_Pre": crowdhuman_train, 'Synthetic_Chinese': synthetic_chinese_train
+                              }
+    
+    dataset2transform_val = {'ICDAR2015': mot17_test,'DSText': mot17_test, 'VideoSynthText':mot17_test, 
+                             'FlowText':mot17_test, 'YVT': mot17_test,
+                             'FlowTextV2':mot17_test,
+                             'BOVText': mot17_test, 'SynthText': mot17_test, 'UnrealText': mot17_test, 
+                             'COCOTextV2': mot17_test,'VISD': mot17_test,'FlowImage': mot17_test,
+                             "ICDAR15_Pre": crowdhuman_train}
+    
     if image_set == 'train':
         return dataset2transform_train
     elif image_set == 'val':

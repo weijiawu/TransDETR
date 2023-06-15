@@ -10,13 +10,17 @@ from datasets.data_tools import get_vocabulary
 class PAN_PP_RecHead_CTC(nn.Module):
 
     def __init__(self,
+                 character = 38,
                  input_dim=512,
                  hidden_dim=128,
                  feature_size=(8, 32)):
         super(PAN_PP_RecHead_CTC, self).__init__()
-        # LOWERCASE  CHINESE
-        voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
         
+        # LOWERCASE  CHINESE
+        if character == 4713:
+            voc, char2id, id2char = get_vocabulary('CHINESE', use_ctc=True)
+        else:
+            voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
         self.voc_size = len(voc)
         self.convs = SeqConvs(hidden_dim, feature_size)
         self.rnn = nn.LSTM(hidden_dim, hidden_dim, num_layers=1, bidirectional=True)
@@ -65,12 +69,10 @@ class PAN_PP_RecHead_CTC(nn.Module):
         targets = targets[rec_masks==1, :]
         preds = preds.permute(1, 0, 2) # 32 N 4714
         target_lengths = (targets != self.blank).long().sum(dim=-1)
-#         print(targets.shape)
         trimmed_targets = [t[:l] for t, l in zip(targets, target_lengths)] # 这里取出了制作label时所有的结果
         targets = torch.cat(trimmed_targets)
         x = F.log_softmax(preds, dim=-1)
         input_lengths = torch.full((x.size(1),), x.size(0), dtype=torch.long)
-#         print(x.shape,targets.shape,input_lengths.shape,target_lengths.shape)
         loss_rec = F.ctc_loss(
                             x, targets, input_lengths, target_lengths,
                             blank=self.blank, zero_infinity=True
@@ -91,16 +93,12 @@ class PAN_PP_RecHead_CTC(nn.Module):
         preds = self.clf(x)    #    32,2,38
 
         out_rec = preds.permute(1, 0, 2) # N 32 38   N  W  C
-#         print(out_rec.shape)
-#         self.training = False
         if self.training:
 #             words, word_scores = self.decode(out_rec)
-#             print(words)
             return out_rec
         else:
             # words, word_scores, out_rec
 #             words, word_scores = self.decode(out_rec)
-#             print(words)
             return out_rec
 
 #     def decode(self, rec): 

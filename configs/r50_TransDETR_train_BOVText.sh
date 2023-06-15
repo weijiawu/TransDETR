@@ -10,8 +10,10 @@
 
 # training BOVText
 # PRETRAIN=exps/e2e_TransVTS_r50_COCOTextV2/checkpoint.pth
+PRETRAIN=exps/e2e_TransVTS_r50_BOVText/checkpoint.pth
+# PRETRAIN=exps/e2e_TransVTS_r50_COCOTextV2_SynthText/checkpoint.pth
 EXP_DIR=exps/e2e_TransVTS_r50_BOVText
-python3 -m torch.distributed.launch --nproc_per_node=8 \
+CUDA_VISIBLE_DEVICES=1,3,4,5,6 CUDA_LAUNCH_BLOCKING=1 python3 -m torch.distributed.launch --nproc_per_node=5 \
     --use_env main.py \
     --meta_arch TransDETR_ignored \
     --dataset_file VideoText \
@@ -25,18 +27,20 @@ python3 -m torch.distributed.launch --nproc_per_node=8 \
     --sample_mode 'random_interval' \
     --sample_interval 3 \
     --sampler_steps 1 2 \
-    --sampler_lengths 3 3 3 \
+    --sampler_lengths 8 8 8 \
     --update_query_pos \
     --merger_dropout 0 \
     --dropout 0 \
     --rec\
+    --is_bilingual \
     --random_drop 0.1 \
     --fp_ratio 0.3 \
     --query_interaction_layer 'QIM' \
     --extra_track_attn \
     --mot_path /share/wuweijia/Data/VideoText/MOTR\
     --data_txt_path_train ./datasets/data_path/BOVText.train \
-    --data_txt_path_val ./datasets/data_path/BOVText.train 
+    --data_txt_path_val ./datasets/data_path/BOVText.train \
+    --pretrained ${PRETRAIN} 
     
 
 # training YVT

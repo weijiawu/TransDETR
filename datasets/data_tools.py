@@ -3,9 +3,8 @@
 '''
 @File    :   tools.py
 @Time    :   2021/11/20 14:28:23
-@Author  :   lizhuang05
-@Version :   1.0
-@Contact :   lizhuang05@kuaishou.com
+@Author  :   weijiawu
+@Version :   1.0 
 @Desc    :   数据预处理工具
 
 '''
@@ -328,10 +327,8 @@ def get_vocabulary(voc_type, EOS='EOS', PADDING='PAD', UNKNOWN='UNK', use_ctc=Fa
 def resize_fix(imgs, shape):
     for i in range(1, len(imgs)):
         img = imgs[i]
-        # 注意 这里不能使用双线行差值
         img_fixed = cv2.resize(img, shape, interpolation=cv2.INTER_NEAREST)
         imgs[i] = img_fixed
-    # 图像预处理需要使用双线性
     imgs[0] = cv2.resize(imgs[0], shape)
     return imgs
 

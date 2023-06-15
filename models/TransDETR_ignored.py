@@ -42,7 +42,8 @@ class ClipMatcher(SetCriterion):
     def __init__(self, num_classes,
                         matcher,
                         weight_dict,
-                        losses):
+                        losses,
+                        language='LOWERCASE'):
         """ Create the criterion.
         Parameters:
             num_classes: number of object categories, omitting the special no-object category
@@ -60,7 +61,7 @@ class ClipMatcher(SetCriterion):
         self.losses_dict = {}
         self._current_frame_idx = 0
         # CHINESE  LOWERCASE
-        self.voc, self.char2id, self.id2char = get_vocabulary('LOWERCASE', use_ctc=True)
+        self.voc, self.char2id, self.id2char = get_vocabulary(language, use_ctc=True)
         self.blank = self.char2id['PAD']
         
     def initialize_for_single_clip(self, gt_instances: List[Instances]):
@@ -182,7 +183,6 @@ class ClipMatcher(SetCriterion):
         if self.focal_loss:
             gt_labels_target = F.one_hot(target_classes, num_classes=self.num_classes + 1)[:, :, :-1]  # no loss for the last (background) class
             gt_labels_target = gt_labels_target.to(src_logits)
-#             print(gt_labels_target.flatten(1).shape)
             loss_ce = sigmoid_focal_loss(src_logits.flatten(1)*ignored_classes,
                                              gt_labels_target.flatten(1)*ignored_classes,
                                              alpha=0.25,
@@ -190,7 +190,6 @@ class ClipMatcher(SetCriterion):
                                              num_boxes=num_boxes, mean_in_dim1=False)
             loss_ce = loss_ce.sum()
         else:
-            print(target_classes)
             loss_ce = F.cross_entropy(src_logits.transpose(1, 2), target_classes, self.empty_weight)
         losses = {'loss_ce': loss_ce}
 
@@ -221,12 +220,12 @@ class ClipMatcher(SetCriterion):
         targets = torch.cat(trimmed_targets)
         x = F.log_softmax(preds, dim=-1)
         input_lengths = torch.full((x.size(1),), x.size(0), dtype=torch.long)
-#         print(x.shape,targets.shape,input_lengths.shape,target_lengths.shape)
+        
         loss_rec = F.ctc_loss(
                             x, targets, input_lengths, target_lengths,
                             blank=self.blank, zero_infinity=True
                         )
-        if loss_rec.view(-1)[0]<0.02:
+        if loss_rec.view(-1)[0]<0.002:
             losses = {'loss_rec': out_recognition.new_full((1,), 0.0, dtype=torch.float32)[0]}
             return losses
         
@@ -279,7 +278,6 @@ class ClipMatcher(SetCriterion):
         ignored[idx] = 1.0
 
         pred_rotate = (src_logits.sigmoid() - 0.5) * math.pi
-#         print(ignored_classes)
         angle_loss = 1 - torch.cos(pred_rotate*ignored.unsqueeze(-1)*ignored_classes.unsqueeze(-1) - target_rotate.unsqueeze(-1)*ignored_classes.unsqueeze(-1))
         sum_ = torch.clamp(ignored.sum(),1,10000)
         losses = {'loss_angle': angle_loss.sum()/(sum_*num_boxes)}
@@ -376,11 +374,11 @@ class ClipMatcher(SetCriterion):
             
             gt_angle = gt_instances_i.rotate[track_instances.matched_gt_idxes[active_idxes]]
             active_track_angle = (active_track_angle.sigmoid() - 0.5) * math.pi
+
             track_instances.angle[active_idxes] = torch.abs(active_track_angle[0] - gt_angle)
             
 #             track_instances.iou[active_idxes] = matched_boxlist_rotated_iou(active_track_boxes, gt_boxes, active_track_angle, gt_angle)
-            
-#             print(track_instances.iou[active_idxes])
+
             
         # step7. merge the unmatched pairs and the matched pairs.
         matched_indices = torch.cat([new_matched_indices, prev_matched_indices], dim=0)
@@ -433,8 +431,19 @@ class ClipMatcher(SetCriterion):
 
 
 class RuntimeTrackerBase(object):
-    def __init__(self, score_thresh=0.5, filter_score_thresh=0.2, miss_tolerance=3):
+    def __init__(self, score_thresh=0.5, filter_score_thresh=0.2, miss_tolerance=1):
         #dataset score_thresh, filter_score_thresh
+        # ICDAR15 0.5 0.2  3(COCOText: 0.6 0.4)
+        # YVT 0.3 0.2
+        # Minetto 0.4 0.3
+        # ICDAR13(detection) 0.4 0.25
+        # BOVText 0.74. 0.57   3
+        # Pretrain on SynthText, test on ICDAR15   0.8  0.6
+        # Pretrain on VISD, test on ICDAR15   0.9  0.7  (finetune 0.7 0.4)
+        # Pretrain on UnrealText, test on ICDAR15   0.6  0.4
+        # Pretrain on Video SynthText, test on ICDAR15   0.6  0.4
+        # Pretrain on Video SynthText(activity), test on ICDAR15   0.6  0.4
+        # Pretrain on Video SynthText(image activity), test on ICDAR15   0.8  0.6
         self.score_thresh = score_thresh
         self.filter_score_thresh = filter_score_thresh
         self.miss_tolerance = miss_tolerance
@@ -463,8 +472,8 @@ class RuntimeTrackerBase(object):
                 
 #                 track_instances.disappear_time[i] += 1
 #                 if track_instances.disappear_time[i] >= self.miss_tolerance:
-                    # Set the obj_id to -1.
-                    # Then this track will be removed by TrackEmbeddingLayer.
+# #                     Set the obj_id to -1.
+# #                     Then this track will be removed by TrackEmbeddingLayer.
 #                     track_instances.obj_idxes[i] = -1
 
 
@@ -509,10 +518,13 @@ class TrackerPostProcess(nn.Module):
         track_instances.boxes = boxes
         track_instances.scores = scores
         track_instances.labels = labels
+        track_instances.roi = track_instances.roi_feature
         track_instances.remove('pred_logits')
         track_instances.remove('pred_boxes')
         track_instances.remove('pred_rotate')
         track_instances.remove('pred_rec')
+        track_instances.remove('roi_feature')
+        
         return track_instances
 
 
@@ -522,7 +534,7 @@ def _get_clones(module, N):
 
 class TransDETR(nn.Module):
     def __init__(self, backbone, transformer, num_classes, num_queries, num_feature_levels, criterion, track_embed,
-                 aux_loss=True, with_box_refine=False, two_stage=False, memory_bank=None):
+                 aux_loss=True, with_box_refine=False, two_stage=False, memory_bank=None,charater=38):
         """ Initializes the model.
         Parameters:
             backbone: torch module of the backbone to be used. See backbone.py
@@ -540,6 +552,9 @@ class TransDETR(nn.Module):
         self.transformer = transformer
         hidden_dim = transformer.d_model
         self.num_classes = num_classes
+        # English:38      Chinese+English: 4713
+        self.bilingual = True
+        self.character = charater
         self.class_embed = nn.Linear(hidden_dim, num_classes)
         self.bbox_embed = MLP(hidden_dim, hidden_dim, 4, 3)
         self.rotate_embed = nn.Linear(hidden_dim, 1)
@@ -585,7 +600,7 @@ class TransDETR(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         
         self.roirotate = ROIAlignRotated((8,32), spatial_scale = (1.), sampling_ratio = 0)
-        self.rec_head = PAN_PP_RecHead_CTC()
+        self.rec_head = PAN_PP_RecHead_CTC(self.character)
         
         prior_prob = 0.01
         bias_value = -math.log((1 - prior_prob) / prior_prob)
@@ -638,13 +653,15 @@ class TransDETR(nn.Module):
         track_instances.angle = torch.zeros((len(track_instances),), dtype=torch.float, device=device)
         track_instances.rec = torch.zeros((len(track_instances),), dtype=torch.float, device=device)
         track_instances.scores = torch.zeros((len(track_instances),), dtype=torch.float, device=device)
+#         track_instances.roi = torch.zeros((len(track_instances),), dtype=torch.float, device=device)
         
         track_instances.track_scores = torch.zeros((len(track_instances),), dtype=torch.float, device=device)
         track_instances.pred_boxes = torch.zeros((len(track_instances), 4), dtype=torch.float, device=device)
         track_instances.pred_logits = torch.zeros((len(track_instances), self.num_classes), dtype=torch.float, device=device)
         track_instances.pred_rotate = torch.zeros((len(track_instances), 1), dtype=torch.float, device=device)
         # English:38      Chinese+English: 4713
-        track_instances.pred_rec = torch.zeros((len(track_instances), 32,38), dtype=torch.float, device=device)
+        track_instances.pred_rec = torch.zeros((len(track_instances), 32, self.character), dtype=torch.float, device=device)
+        track_instances.roi_feature = torch.zeros((len(track_instances), 128,8,32), dtype=torch.float, device=device)
 
         mem_bank_len = self.mem_bank_len
         track_instances.mem_bank = torch.zeros((len(track_instances), mem_bank_len, dim // 2), dtype=torch.float32, device=device)
@@ -700,7 +717,6 @@ class TransDETR(nn.Module):
             temp_src = self.input_proj[l](src)
             srcs.append(temp_src)
             features_rec.append(temp_src)
-#             print(self.input_proj[l](src).shape)
             masks.append(mask)
             assert mask is not None
         
@@ -780,9 +796,7 @@ class TransDETR(nn.Module):
         outputs_rotate = torch.stack(outputs_rotates)
         outputs_class = torch.stack(outputs_classes)
         outputs_coord = torch.stack(outputs_coords)
-        
-#         print(init_reference.shape)
-#         print(inter_references[:, :, :, :2].shape)
+
         ref_pts_all = torch.cat([init_reference[None], inter_references[:, :, :, :2]], dim=0)
 #         print(ref_pts_all.shape)
 #         out = {'pred_logits': outputs_class[-1], 'pred_rotate': outputs_rotate[-1], 'pred_boxes': outputs_coord[-1], 'ref_pts': ref_pts_all[5]}
@@ -847,11 +861,14 @@ class TransDETR(nn.Module):
                 roi_features=self.roirotate(rec_feature,rois)
                 out_rec = self.rec_head(roi_features) # N * 32 (最大字符串长度) * voc_size 这是识别的信息 
                 track_instances.pred_rec = out_rec
+                track_instances.roi_feature = roi_features
+                
             else:
                 # English:38      Chinese+English: 4713
-                out_rec =  torch.zeros((len(track_instances), 32,38), dtype=torch.float, device=track_instances.pred_boxes.device)
+                out_rec =  torch.zeros((len(track_instances), 32,self.character), dtype=torch.float, device=track_instances.pred_boxes.device)
+                roi =  torch.zeros((len(track_instances), 128, 8, 32), dtype=torch.float, device=track_instances.pred_boxes.device)
                 track_instances.pred_rec = out_rec
-                
+                track_instances.roi_feature = roi
             
             
         if not self.training and time_cost!=None:
@@ -972,35 +989,64 @@ def build(args):
     num_frames_per_batch = max(args.sampler_lengths)
     weight_dict = {}
     for i in range(num_frames_per_batch):
-        weight_dict.update({"frame_{}_loss_ce".format(i): args.cls_loss_coef,
-                            'frame_{}_loss_bbox'.format(i): args.bbox_loss_coef,
-                            'frame_{}_loss_giou'.format(i): args.giou_loss_coef,
-                            'frame_{}_loss_angle'.format(i): 50.,
-                            'frame_{}_loss_rec'.format(i): 1,
-                            })
+        if not args.only_rec:
+            weight_dict.update({"frame_{}_loss_ce".format(i): args.cls_loss_coef,
+                                'frame_{}_loss_bbox'.format(i): args.bbox_loss_coef,
+                                'frame_{}_loss_giou'.format(i): args.giou_loss_coef,
+                                'frame_{}_loss_angle'.format(i): 50.,
+                                'frame_{}_loss_rec'.format(i): 5,
+                                })
+        else:
+        # BOVText
+            weight_dict.update({"frame_{}_loss_ce".format(i): 0,
+                                'frame_{}_loss_bbox'.format(i): 0,
+                                'frame_{}_loss_giou'.format(i): 0,
+                                'frame_{}_loss_angle'.format(i): 0,
+                                'frame_{}_loss_rec'.format(i): 1,
+                                })
 
     # TODO this is a hack
     if args.aux_loss:
         for i in range(num_frames_per_batch):
             for j in range(args.dec_layers - 1):
-                weight_dict.update({"frame_{}_aux{}_loss_ce".format(i, j): args.cls_loss_coef,
-                                    'frame_{}_aux{}_loss_bbox'.format(i, j): args.bbox_loss_coef,
-                                    'frame_{}_aux{}_loss_giou'.format(i, j): args.giou_loss_coef,
-                                    'frame_{}_aux{}_loss_angle'.format(i, j): 50.,
-                                    'frame_{}_aux{}_loss_rec'.format(i, j): 1,
-                                    })
+                if not args.only_rec:
+                    weight_dict.update({"frame_{}_aux{}_loss_ce".format(i, j): args.cls_loss_coef,
+                                        'frame_{}_aux{}_loss_bbox'.format(i, j): args.bbox_loss_coef,
+                                        'frame_{}_aux{}_loss_giou'.format(i, j): args.giou_loss_coef,
+                                        'frame_{}_aux{}_loss_angle'.format(i, j): 50.,
+                                        'frame_{}_aux{}_loss_rec'.format(i, j): 5,
+                                        })
+                else:
+                    # BOVText
+                    weight_dict.update({"frame_{}_aux{}_loss_ce".format(i, j): 0,
+                                        'frame_{}_aux{}_loss_bbox'.format(i, j): 0,
+                                        'frame_{}_aux{}_loss_giou'.format(i, j): 0,
+                                        'frame_{}_aux{}_loss_angle'.format(i, j): 0,
+                                        'frame_{}_aux{}_loss_rec'.format(i, j): 1,
+                                        })
+
     if args.memory_bank_type is not None and len(args.memory_bank_type) > 0:
         memory_bank = build_memory_bank(args, d_model, hidden_dim, d_model * 2)
+#         for i in range(num_frames_per_batch):
+#             weight_dict.update({"frame_{}_track_loss_ce".format(i): args.cls_loss_coef})
         for i in range(num_frames_per_batch):
-            weight_dict.update({"frame_{}_track_loss_ce".format(i): args.cls_loss_coef})
+            weight_dict.update({"frame_{}_track_loss_ce".format(i): 0})
     else:
         memory_bank = None
     losses = ['labels', 'boxes', 'rotate']
-    
+
     if args.rec:
         losses.append('rec')
-        
-    criterion = ClipMatcher(num_classes, matcher=img_matcher, weight_dict=weight_dict, losses=losses)
+    
+    # english：38 or bilingual：4713
+    if not args.is_bilingual:
+        language = 'LOWERCASE'
+        charater = 38
+    else:
+        language = 'CHINESE'
+        charater = 4713
+    
+    criterion = ClipMatcher(num_classes, matcher=img_matcher, weight_dict=weight_dict, losses=losses,language=language)
     criterion.to(device)
     postprocessors = {}
     model = TransDETR(
@@ -1015,5 +1061,6 @@ def build(args):
         with_box_refine=args.with_box_refine,
         two_stage=args.two_stage,
         memory_bank=memory_bank,
+        charater=charater
     )
     return model, criterion, postprocessors

@@ -8,7 +8,8 @@
 EXP_DIR=exps/e2e_TransVTS_r50_BOVText
 # EXP_DIR=exps/e2e_TransVTS_r50_SynthText
 # EXP_DIR=exps/e2e_TransVTS_r50_COCOTextV2
-python3 eval.py \
+CUDA_VISIBLE_DEVICES=0 python3 parallel_eval_icdar15.py \
+    --thread_num 1\
     --meta_arch TransDETR_ignored \
     --dataset_file VideoText \
     --epoch 200 \
@@ -24,6 +25,8 @@ python3 eval.py \
     --sampler_lengths 2 3 4 5 \
     --update_query_pos \
     --merger_dropout 0 \
+    --is_bilingual \
+    --rec\
     --dropout 0 \
     --random_drop 0.1 \
     --fp_ratio 0.3 \
@@ -32,8 +35,9 @@ python3 eval.py \
     --mot_path /share/wuweijia/Data/VideoText/MOTR\
     --data_txt_path_train ./datasets/data_path/BOVText.train \
     --data_txt_path_val ./datasets/data_path/BOVText.train \
-    --resume ${EXP_DIR}/checkpoint.pth \
-    --show
+    --resume ${EXP_DIR}/checkpoint.pth
+#     \
+#     --show
     
 
 
