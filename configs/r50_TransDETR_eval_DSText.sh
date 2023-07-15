@@ -5,10 +5,20 @@
 # Copyright (c) 2020 SenseTime. All Rights Reserved.
 # ------------------------------------------------------------------------
 
-EXP_DIR=./exps/e2e_TransVTS_r50_DSText
+EXP_DIR=exps/e2e_TransDETR_r50_DSText
+# EXP_DIR=exps/e2e_TransVTS_r50_VideoSynthText
+# EXP_DIR=exps/e2e_TransVTS_r50_FlowImage
+# EXP_DIR=exps/e2e_TransVTS_r50_UnrealText
+# EXP_DIR=exps/e2e_TransVTS_r50_FlowTextV2
+# EXP_DIR=exps/e2e_TransVTS_r50_FlowText
+# EXP_DIR=exps/e2e_TransVTS_r50_SynthText
+# EXP_DIR=exps/e2e_TransVTS_r50_VISD
+# EXP_DIR=exps/e2e_TransVTS_r50_COCOTextV2   parallel_eval_icdar15.py
 
-
-python3 parallel_eval_icdar15.py \
+#eval.py
+#parallel_eval_icdar15.py
+python3 eval.py \
+    --thread_num 1\
     --meta_arch TransDETR_ignored \
     --dataset_file Text \
     --epoch 200 \
@@ -26,14 +36,17 @@ python3 parallel_eval_icdar15.py \
     --update_query_pos \
     --merger_dropout 0 \
     --dropout 0 \
+    --num_queries 100\
     --random_drop 0.1 \
     --fp_ratio 0.3 \
     --query_interaction_layer 'QIM' \
     --extra_track_attn \
-    --mot_path /mmu-ocr/pub/weijiawu/Data/VideoText/MOTR\
+    --mot_path /mmu-ocr/weijiawu/Data/VideoText/MOTR\
     --data_txt_path_train ./datasets/data_path/DSText.train \
     --data_txt_path_val ./datasets/data_path/DSText.train \
-    --resume exps/e2e_TransVTS_r50_DSText/checkpoint.pth
-    #--resume ${EXP_DIR}/checkpoint.pth
+    --resume exps/e2e_TransVTS_r50_BOVText/checkpoint0000_IDF173.4_MOTA67.8.pth.pth
+#     --resume ${EXP_DIR}/checkpoint.pth
 #     \
 #     --show
+    
+

@@ -221,7 +221,7 @@ if __name__ == "__main__":
     txt_path = "./exps/e2e_TransVTS_r50_DSText/preds"
     
 #     video_path = "/share/wuweijia/MyBenchMark/relabel/To30s/Video"
-    frame_path_root = "/mmu-ocr/pub/weijiawu/Data/VideoText/MOTR/DSText/images/test"
+    frame_path_root = "/mmu-ocr/weijiawu/Data/VideoText/MOTR/DSText/images/test"
     result_path_cls_root = "./exps/vis_DSText"
     
     print( os.listdir(annotation_path_root))
@@ -242,8 +242,8 @@ if __name__ == "__main__":
             continue
         if "xml" not in seq:
             continue
-        
-        if "156" not in seq:
+        # Sports/Video_105_0_5  Street_View_Indoor/Video_222_2_2
+        if "216" not in seq:
             continue
         txt_ = os.path.join(txt_path,"{}.txt".format(seq.split(".")[0]))
         

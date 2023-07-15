@@ -25,7 +25,7 @@
 from __future__ import print_function
 from PIL import Image, ImageDraw, ImageFont
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import numpy as np
 import random
 import argparse
@@ -58,25 +58,6 @@ from datasets.data_tools import get_vocabulary
 from util.utils import write_result_as_txt,debug, setup_logger,write_lines,MyEncoder
 from collections import OrderedDict
 
-COLORS_10 = [(144, 238, 144), (178, 34, 34), (221, 160, 221), (0, 255, 0), (0, 128, 0), (210, 105, 30), (220, 20, 60),
-             (192, 192, 192), (255, 228, 196), (50, 205, 50), (139, 0, 139), (100, 149, 237), (138, 43, 226),
-             (238, 130, 238),
-             (255, 0, 255), (0, 100, 0), (127, 255, 0), (255, 0, 255), (0, 0, 205), (255, 140, 0), (255, 239, 213),
-             (199, 21, 133), (124, 252, 0), (147, 112, 219), (106, 90, 205), (176, 196, 222), (65, 105, 225),
-             (173, 255, 47),
-             (255, 20, 147), (219, 112, 147), (186, 85, 211), (199, 21, 133), (148, 0, 211), (255, 99, 71),
-             (144, 238, 144),
-             (255, 255, 0), (230, 230, 250), (0, 0, 255), (128, 128, 0), (189, 183, 107), (255, 255, 224),
-             (128, 128, 128),
-             (105, 105, 105), (64, 224, 208), (205, 133, 63), (0, 128, 128), (72, 209, 204), (139, 69, 19),
-             (255, 245, 238),
-             (250, 240, 230), (152, 251, 152), (0, 255, 255), (135, 206, 235), (0, 191, 255), (176, 224, 230),
-             (0, 250, 154),
-             (245, 255, 250), (240, 230, 140), (245, 222, 179), (0, 139, 139), (143, 188, 143), (255, 0, 0),
-             (240, 128, 128),
-             (102, 205, 170), (60, 179, 113), (46, 139, 87), (165, 42, 42), (178, 34, 34), (175, 238, 238),
-             (255, 248, 220),
-             (218, 165, 32), (255, 250, 240), (253, 245, 230), (244, 164, 96), (210, 105, 30)]
 
 
 def plot_one_box(x, img, color=None, label=None, score=None, line_thickness=None):
@@ -479,12 +460,21 @@ class Detector(object):
         
         if "YVT" in args.data_txt_path_val:
             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, '{}f{}.jpg'.format(self.seq_num,str(_).zfill(4))) for _ in range(0,len(img_list))]
+            voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
         elif "minetto" in args.data_txt_path_val:
             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, '{}.jpg'.format(str(_).zfill(6))) for _ in range(0,len(img_list))]
+            voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
+        elif "DSText" in args.data_txt_path_val:
+            self.img_list = [os.path.join(self.args.mot_path, self.seq_num, "{}.jpg".format(_)) for _ in range(1,len(img_list)+1)]
+            print("frame number:",len(self.img_list))
+            voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
         elif "BOVText" in args.data_txt_path_val:
             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, "{}.jpg".format(_)) for _ in range(1,len(img_list)+1)]
+            voc, char2id, id2char = get_vocabulary('CHINESE', use_ctc=True)
         else:
             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, "{}.jpg".format(_)) for _ in range(1,len(img_list)+1)]
+            voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
+#             self.img_list = [os.path.join(self.args.mot_path, self.seq_num, "{}.jpg".format(_)) for _ in range(100,133)]
         
         
         try:
@@ -496,8 +486,7 @@ class Detector(object):
         self.tr_tracker = MOTR()
         
         #rec 配置  CHINESE  LOWERCASE
-        voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
-        # 解码使用
+#         voc, char2id, id2char = get_vocabulary('LOWERCASE', use_ctc=True)
         self.char2id = char2id
         self.id2char = id2char
         self.blank = char2id['PAD']
@@ -519,19 +508,35 @@ class Detector(object):
         
         if "minetto" in args.data_txt_path_val:
             xml_name = self.seq_num
+            
+        elif "DSText" in args.data_txt_path_val:
+            xml_name = self.seq_num.split("/")[-1]
+            self.predict_path = os.path.join(predict_path,"res_{}.xml".format(xml_name))
+            
+            json_path = os.path.join(self.args.output_dir, 'jons')
+            os.makedirs(json_path, exist_ok=True)
+            self.json_path = os.path.join(json_path,"{}.json".format(self.seq_num.split("/")[-1]))
+            
         elif "BOVText" in args.data_txt_path_val:
             self.seq_num = self.seq_num.replace("/","_")
             xml_name = self.seq_num
+            
+            self.predict_path = os.path.join(predict_path,"res_{}.xml".format(xml_name))
+            
+            json_path = os.path.join(self.args.output_dir, 'jons')
+            os.makedirs(json_path, exist_ok=True)
+            self.json_path = os.path.join(json_path,"{}.json".format(self.seq_num.split("/")[-1]))
+            
         else:
             xml_name = self.seq_num.split("_")
             xml_name = xml_name[0] + "_" + xml_name[1]
             
-        self.predict_path = os.path.join(predict_path,"res_{}.xml".format(xml_name.replace("V","v")))
-        
-        json_path = os.path.join(self.args.output_dir, 'jons')
-        os.makedirs(json_path, exist_ok=True)
-        self.json_path = os.path.join(json_path,"{}.json".format(self.seq_num))
-        
+            self.predict_path = os.path.join(predict_path,"res_{}.xml".format(xml_name.replace("V","v")))
+
+            json_path = os.path.join(self.args.output_dir, 'jons')
+            os.makedirs(json_path, exist_ok=True)
+            self.json_path = os.path.join(json_path,"{}.json".format(self.seq_num))
+
 #         if os.path.exists(os.path.join(self.predict_path, 'gt.txt')):
 #             os.remove(os.path.join(self.predict_path, 'gt.txt'))
         
@@ -633,7 +638,8 @@ class Detector(object):
                     c_word_score += word_preds_max_prob[i]
                     num_chars += 1
                     if (not (i > 0 and t[i - 1].item() == t[i].item())):  # removing repeated characters and blank.
-                        s += self.id2char[t[i].item()]
+                        if self.id2char[t[i].item()]!='UNK':
+                            s += self.id2char[t[i].item()]
 #             if c_word_score/(num_chars+0.000001) < filter_word_score:
 #                 s = "###"
             word_scores.append(c_word_score/(num_chars+0.000001))
@@ -673,6 +679,9 @@ class Detector(object):
         rgbs = {}
         annotation = {}
         
+#         if os.path.exists(self.json_path):
+#             return 
+        
         dict_one_cost = {
             "backbone_time" : 0,
             "nect_time" : 0,
@@ -683,6 +692,7 @@ class Detector(object):
             "memory_embed_time" : 0,
              "postprocess_time": 0 
             }
+        
         for i in tqdm(range(0, self.img_len)):
             img, targets = load_img_from_file(self.img_list[i])
             cur_img, ori_img = self.init_img(img)
@@ -740,7 +750,7 @@ class Detector(object):
                     gt_boxes = None
                 else:
                     gt_boxes = self.ann[str(i+1)]
-#                 print("???")
+
                 self.visualize_img_with_bbox(cur_vis_img_path, ori_img, dt_instances, ref_pts=all_ref_pts, gt_boxes=gt_boxes,rgbs=rgbs)
 
             boxes,IDs,scores,words = dt_instances.boxes, dt_instances.obj_idxes, dt_instances.scores, dt_instances.word
@@ -778,7 +788,7 @@ def getBboxesAndLabels_icd131(annotations):
 
         points = np.array(object_boxes).reshape((-1))
         points = cv2.minAreaRect(points.reshape((4, 2)))
-        # 获取矩形四个顶点，浮点型
+
         points = cv2.boxPoints(points).reshape((-1))         
         IDs.append(annotation.attrib["ID"])
         Transcriptions.append(annotation.attrib["Transcription"])
@@ -881,6 +891,14 @@ if __name__ == '__main__':
     if "ICDAR15" in args.data_txt_path_val:
         args.mot_path = os.path.join(args.mot_path,"ICDAR2015/images/test")
         seq_nums = os.listdir(args.mot_path)
+#         args.mot_path = "/mmu-ocr/yuzhong/code/VideoSynthtext/SynthText/gen_data/synthtextvid_709"
+#         seq_nums = ["VirtualPropertyTour_EstateAgentFPVDrone-Kb7vdBdCeu0_00170_00180_84_134_0"]
+    elif "DSText" in args.data_txt_path_val:  
+        args.mot_path = os.path.join(args.mot_path,"DSText/images/test")
+        seq_nums = []
+        for seq in os.listdir(args.mot_path):
+            for video_name in os.listdir(os.path.join(args.mot_path,seq)):
+                seq_nums.append(os.path.join(seq,video_name))
     elif "YVT" in args.data_txt_path_val:  
         args.mot_path = os.path.join(args.mot_path,"YVT/images/test")
         seq_nums = os.listdir(args.mot_path)
@@ -893,8 +911,6 @@ if __name__ == '__main__':
         for seq in os.listdir(args.mot_path):
             for video_name in os.listdir(os.path.join(args.mot_path,seq)):
                 seq_nums.append(os.path.join(seq,video_name))
-            
-#         seq_nums = os.listdir(args.mot_path)
     else:
         raise NotImplementedError()
             
@@ -914,12 +930,19 @@ if __name__ == '__main__':
     "memory_embed_time" : 0,
      "postprocess_time": 0 
     }
+    
+    number_frame = 0
     for seq_num in seq_nums:
 #         if seq_num not in ICDAR2013_seqs and "ICDAR15" in args.data_txt_path_val:
 #             continue
+#         if seq_num != "Street_View_Indoor/Video_222_2_2":
+#             continue
         print("solve {}".format(seq_num))
+        number_frame += len(os.listdir(os.path.join(args.mot_path, seq_num)))
+        
         det = Detector(args, model=detr, seq_num=seq_num)
         time_cost = det.detect(dict_cost,vis=args.show)
+    print("frame number:",number_frame)
 
     getid_text(os.path.join(args.output_dir, 'preds'))
     print(dict_cost)

@@ -32,7 +32,8 @@ import datasets.samplers as samplers
 from datasets import build_dataset, get_coco_api_from_dataset
 from engine import evaluate, train_one_epoch, train_one_epoch_mot
 from models import build_model
-
+import os
+# os.environ["CUDA_VISIBLE_DEVICES"] = "6"
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Deformable DETR Detector', add_help=False)
@@ -44,6 +45,7 @@ def get_args_parser():
     parser.add_argument('--batch_size', default=2, type=int)
     parser.add_argument('--weight_decay', default=1e-4, type=float)
     parser.add_argument('--epochs', default=50, type=int)
+    parser.add_argument('--thread_num', default=8, type=int)
     parser.add_argument('--lr_drop', default=40, type=int)
     parser.add_argument('--save_period', default=50, type=int)
     parser.add_argument('--lr_drop_epochs', default=None, type=int, nargs='+')
@@ -90,7 +92,7 @@ def get_args_parser():
                         help="Dropout applied in the transformer")
     parser.add_argument('--nheads', default=8, type=int,
                         help="Number of attention heads inside the transformer's attentions")
-    parser.add_argument('--num_queries', default=100, type=int,
+    parser.add_argument('--num_queries', default=200, type=int,
                         help="Number of query slots")
     parser.add_argument('--dec_n_points', default=4, type=int)
     parser.add_argument('--enc_n_points', default=4, type=int)
@@ -108,7 +110,10 @@ def get_args_parser():
     # * recognition
     parser.add_argument('--rec', action='store_true',
                         help="Train recognition head if the flag is provided")
-    
+    parser.add_argument('--is_bilingual', action='store_true',
+                        help="using bilingual (english and chinese) if the flag is provided")
+    parser.add_argument('--only_rec', action='store_true',
+                        help="only training rec")
     
     # Loss
     parser.add_argument('--no_aux_loss', dest='aux_loss', action='store_false',
@@ -326,7 +331,7 @@ def main(args):
     if args.dataset_file in datasets:
         train_func = train_one_epoch_mot
         dataset_train.set_epoch(args.start_epoch)
-#         dataset_val.set_epoch(args.start_epoch)
+
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             sampler_train.set_epoch(epoch)
@@ -350,7 +355,6 @@ def main(args):
 
         if args.dataset_file in datasets:
             dataset_train.step_epoch()
-#             dataset_val.step_epoch()
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))

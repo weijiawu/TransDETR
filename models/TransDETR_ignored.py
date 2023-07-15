@@ -431,23 +431,15 @@ class ClipMatcher(SetCriterion):
 
 
 class RuntimeTrackerBase(object):
-    def __init__(self, score_thresh=0.5, filter_score_thresh=0.2, miss_tolerance=1):
+    def __init__(self, score_thresh=0.5, filter_score_thresh=0.4, miss_tolerance=3,NMS_Threhold=0.7):
         #dataset score_thresh, filter_score_thresh
         # ICDAR15 0.5 0.2  3(COCOText: 0.6 0.4)
-        # YVT 0.3 0.2
-        # Minetto 0.4 0.3
-        # ICDAR13(detection) 0.4 0.25
-        # BOVText 0.74. 0.57   3
-        # Pretrain on SynthText, test on ICDAR15   0.8  0.6
-        # Pretrain on VISD, test on ICDAR15   0.9  0.7  (finetune 0.7 0.4)
-        # Pretrain on UnrealText, test on ICDAR15   0.6  0.4
-        # Pretrain on Video SynthText, test on ICDAR15   0.6  0.4
-        # Pretrain on Video SynthText(activity), test on ICDAR15   0.6  0.4
-        # Pretrain on Video SynthText(image activity), test on ICDAR15   0.8  0.6
+        # DSText 0.5 0.4  3    (E2E 0.83,0.73)
         self.score_thresh = score_thresh
         self.filter_score_thresh = filter_score_thresh
         self.miss_tolerance = miss_tolerance
         self.max_obj_id = 0
+        self.NMS_Threhold = NMS_Threhold
 
     def clear(self):
         self.max_obj_id = 0
@@ -456,6 +448,22 @@ class RuntimeTrackerBase(object):
         keep = dt_instances.obj_idxes >=0
         return dt_instances[keep]
     
+    def check_NMS(self,track_instances,i,keep_1):
+        max_iou = 0
+        
+        i_box = box_ops.box_cxcywh_to_xyxy(track_instances[i:i+1].pred_boxes).repeat(len(track_instances[keep_1]),1)
+        idx_boxes = box_ops.box_cxcywh_to_xyxy(track_instances[keep_1].pred_boxes)
+        if len(idx_boxes)==0:
+            return 0
+        iou = matched_boxlist_iou(Boxes(i_box), Boxes(idx_boxes))
+        iou[iou==torch.max(iou).item()] = 0
+        max_iou=torch.max(iou).item()
+        
+        return max_iou
+                
+#                 track_instances.pred_boxes = outputs_coord[-1, 0]
+#                 track_instances.pred_rotate = outputs_rotate[-1, 0]
+        
     def update(self, track_instances: Instances):
         track_instances.disappear_time[track_instances.scores >= self.score_thresh] = 0
         
@@ -463,12 +471,18 @@ class RuntimeTrackerBase(object):
         
         for i in range(len(track_instances)):
             if track_instances.obj_idxes[i] == -1 and track_instances.scores[i] >= self.score_thresh:
-
-                track_instances.obj_idxes[i] = self.max_obj_id
-                self.max_obj_id += 1
+                keep_1 = track_instances.obj_idxes >=0
+                if self.check_NMS(track_instances,i,keep_1)<self.NMS_Threhold:
+                    track_instances.obj_idxes[i] = self.max_obj_id
+                    self.max_obj_id += 1
                     
-            elif track_instances.obj_idxes[i] >= 0 and track_instances.scores[i] < self.filter_score_thresh:
-                track_instances.obj_idxes[i] = -1
+            elif track_instances.obj_idxes[i] >= 0:
+                
+                keep_1 = track_instances.obj_idxes >= 0
+                if track_instances.scores[i] < self.filter_score_thresh:
+                    track_instances.obj_idxes[i] = -1
+                elif self.check_NMS(track_instances,i,keep_1)>self.NMS_Threhold:
+                    track_instances.obj_idxes[i] = -1
                 
 #                 track_instances.disappear_time[i] += 1
 #                 if track_instances.disappear_time[i] >= self.miss_tolerance:
@@ -809,7 +823,9 @@ class TransDETR(nn.Module):
                 track_scores = outputs_class[-1, 0, :].sigmoid().max(dim=-1).values
             else:
                 track_scores = outputs_class[-1, 0, :, 0].sigmoid()
-
+        
+        
+            
         track_instances.scores = track_scores
         track_instances.pred_logits = outputs_class[-1, 0]
         track_instances.pred_boxes = outputs_coord[-1, 0]
@@ -850,7 +866,8 @@ class TransDETR(nn.Module):
 #             recog_indx = track_instances.scores>0.5
             keep = track_instances.obj_idxes >=0
             track_instances = track_instances[keep]
-        
+            
+            print(len(track_instances))
             if track_instances.pred_boxes.shape[0] != 0:  
                 rois =  torch.full((track_instances.pred_boxes.shape[0], 6), 0.0,
                                         dtype=torch.float, device=rec_feature.device)

@@ -3,7 +3,7 @@ import os
 import numpy as np
 from util.utils import write_result_as_txt,debug, setup_logger,write_lines,MyEncoder
 try:
-    import xml.etree.cElementTree as ET  
+    import xml.etree.cElementTree as ET  # 解析xml的c语言版的模块
 except ImportError:
     import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
@@ -232,10 +232,14 @@ def gen_data_path(path,split_train_test="train",data_path_str = "./datasets/data
             lines.append(frame_real_path)
     write_lines(data_path_str, lines)  
     
+# path of ground truth of ICDAR2015 video
+from_label_root = "./ICDAR2015_video/train/gt"
 
-from_label_root = "/share/wuweijia/Data/ICDAR2015_video/train/gt"
-seq_root = '/share/wuweijia/Data/VideoText/MOTR/ICDAR2015/images/train'
-label_root = '/share/wuweijia/Data/VideoText/MOTR/ICDAR2015/labels_with_ids/train'
+# path of video frames 
+seq_root = './Dataset/ICDAR2015/images/train'
+
+# path to generate the annotation
+label_root = './Dataset/ICDAR2015/labels_with_ids/train'
 mkdirs(label_root)
 seqs = [s for s in os.listdir(seq_root)]
 
@@ -286,4 +290,5 @@ for seq in tqdm(seqs):
             
         write_lines(label_fpath, lines)     
 
-gen_data_path(path="/share/wuweijia/Data/VideoText/MOTR/ICDAR2015")
+# to generate data_path .txt
+gen_data_path(path="./Dataset/ICDAR2015")

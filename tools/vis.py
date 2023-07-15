@@ -33,8 +33,11 @@ def pics2video(frames_dir="", fps=25):
     
 if __name__ == "__main__":
 #     image_path = "./exps/e2e_TransVTS_r50_COCOTextV2/results"   e2e_TransVTS_r50_SynthText   e2e_TransVTS_r50_ICDAR15   e2e_TransVTS_r50_BOVText
-    image_path = "./exps/e2e_TransVTS_r50_BOVText/results/Cls12_Interview"
+    image_path = "./exps/e2e_TransVTS_r50_VideoSynthText/results/VirtualPropertyTour_EstateAgentFPVDrone-Kb7vdBdCeu0_00170_00180_84_134_0"
     seqs = ["Video_20_5_1","Video_6_3_2","Video_49_6_4","Video_5_3_2","Video_32_2_3","Video_23_5_2","Video_39_2_3","Video_35_2_3","Video_1_1_2","Video_44_6_4","Video_17_3_1","Video_24_5_2","Video_11_4_1","Video_53_7_4","Video_48_6_4"]
+    
+    pics2video(frames_dir=image_path,fps=5)
+        
     for video_name in os.listdir(image_path):
 #         if video_name not in seqs:
 #             continue
@@ -47,6 +50,6 @@ if __name__ == "__main__":
         
         try:
             video_name_one = os.path.join(image_path,video_name)
-            pics2video(frames_dir=video_name_one,fps=25)
+            pics2video(frames_dir=video_name_one,fps=5)
         except:
             continue

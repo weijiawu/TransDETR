@@ -505,8 +505,8 @@ class Detector(object):
         self.img_width = 1536
         
         # BOVText
-        self.img_height = 640
-        self.img_width = 1536
+#         self.img_height = 640
+#         self.img_width = 1536
         
 
         
@@ -1020,7 +1020,7 @@ if __name__ == '__main__':
     result_dict = dict(result_dict)    
     
 
-    if "ICDAR15" in args.data_txt_path_val:
+    if "ICDAR15" in args.data_txt_path_val or "DSText" in args.data_txt_path_val:
         getid_text(os.path.join(args.output_dir, 'preds_3'))
         print(dict_cost)
     

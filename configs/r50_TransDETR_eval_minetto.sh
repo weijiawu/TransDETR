@@ -32,4 +32,8 @@ python3 eval.py \
     --mot_path /share/wuweijia/Data/VideoText/MOTR\
     --data_txt_path_train ./datasets/data_path/minetto.train \
     --data_txt_path_val ./datasets/data_path/minetto.train \
-    --resume exps/e2e_TransVTS_r50_ICDAR15/checkpoint0040.pth
+    --resume exps/e2e_TransVTS_r50_FlowText/checkpointMOTA27.4_IDF47.9.pth
+#     --resume exps/e2e_TransVTS_r50_ICDAR15/checkpoint_FlowText_MOTA48.5IDF163.1.pth
+    
+    #--resume exps/e2e_TransVTS_r50_VISD/checkpointMOTA0.214IDF144.7.pth
+    #--resume exps/e2e_TransVTS_r50_FlowTextV2/checkpoint0018.pth

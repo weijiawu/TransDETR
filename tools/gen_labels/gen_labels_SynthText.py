@@ -235,67 +235,69 @@ def gen_data_path(path,split_train_test="train",data_path_str = "./datasets/data
 
 
     
-from_label_root = "/share/wuweijia/Data/SynthText/gt.mat"
-seq_root = '/share/wuweijia/Data/SynthText'
-label_root = '/share/wuweijia/Data/VideoText/MOTR/SynthText/labels_with_ids/train'
+from_label_root = "/mmu-ocr/weijiawu/Data/SynthText/gt.mat"
+seq_root = '/mmu-ocr/weijiawu/Data/SynthText'
+label_root = '/mmu-ocr/weijiawu/Data/VideoText/MOTR/SynthText/labels_with_ids/train'
 mkdirs(label_root)
 
 targets = {}
 sio.loadmat(from_label_root, targets, squeeze_me=True, struct_as_record=False,
                     variable_names=['imnames', 'wordBB', 'txt'])
 
-# imageNames = targets['imnames']
-# wordBBoxes = targets['wordBB']
-# transcripts = targets['txt']
-# tid_curr = 0        
-# for idx in range(tqdm(len(imageNames))):
-#     image_path = imageNames[idx]
-#     word_b_boxes = wordBBoxes[idx] # 2 * 4 * num_words
-#     transcript = transcripts[idx]
+imageNames = targets['imnames']
+wordBBoxes = targets['wordBB']
+transcripts = targets['txt']
+tid_curr = 0        
+for idx in tqdm(range(len(imageNames))):
+    image_path = imageNames[idx]
+    word_b_boxes = wordBBoxes[idx] # 2 * 4 * num_words
+    transcript = transcripts[idx]
     
-#     video_label_root = osp.join(label_root, image_path.split("/")[0])
-#     mkdirs(video_label_root)
+    video_label_root = osp.join(label_root, image_path.split("/")[0])
+    mkdirs(video_label_root)
     
-#     frame_path_one = osp.join(seq_root, image_path)
-#     img = cv2.imread(frame_path_one)
-#     seq_height, seq_width = img.shape[:2]
+    frame_path_one = osp.join(seq_root, image_path)
+    img = cv2.imread(frame_path_one)
+    seq_height, seq_width = img.shape[:2]
     
     
-#     label_fpath = osp.join(video_label_root, image_path.split("/")[1].replace("jpg","txt").replace("png","txt"))
+    label_fpath = osp.join(video_label_root, image_path.split("/")[1].replace("jpg","txt").replace("png","txt"))
     
-#     word_b_boxes = np.expand_dims(word_b_boxes, axis=2) if (word_b_boxes.ndim == 2) else word_b_boxes
-#     _, _, num_of_words = word_b_boxes.shape
-#     text_polys = word_b_boxes.transpose((2, 1, 0))
+    word_b_boxes = np.expand_dims(word_b_boxes, axis=2) if (word_b_boxes.ndim == 2) else word_b_boxes
+    _, _, num_of_words = word_b_boxes.shape
+    text_polys = word_b_boxes.transpose((2, 1, 0))
     
-#     if isinstance(transcript, str):
-#         transcript = transcript.split()
+    if isinstance(transcript, str):
+        transcript = transcript.split()
             
-#     words = []
-#     for idx,text in enumerate(transcript):
-#         text = text.replace('\n', ' ').replace('\r', ' ')
-#         words.extend([w for w in text.split(' ') if len(w) > 0])
+    words = []
+    for idx,text in enumerate(transcript):
+        text = text.replace('\n', ' ').replace('\r', ' ')
+        words.extend([w for w in text.split(' ') if len(w) > 0])
     
-#     if len(words)!=len(text_polys):
-#         print(image_path)
-#         continue
+    if len(words)!=len(text_polys):
+        print(image_path)
+        continue
         
-#     lines = []    
-#     for points,word in zip(text_polys,words):
-#         tid_curr += 1
-#         points = cv2.minAreaRect(points.reshape((int(len(points)), 2)))
-#         points = cv2.boxPoints(points).reshape((-1))
-#         box, rotate = get_rotate(points)
-#         x, y, w, h = box
-
-#         x += w / 2
-#         y += h / 2
-#         label_str = '0 {:d} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {}\n'.format(
-#         tid_curr, x / seq_width, y / seq_height, w / seq_width, h / seq_height, rotate, word)
-#         lines.append(label_str)
+    lines = []    
+    for points,word in zip(text_polys,words):
+        tid_curr += 1
+        points = cv2.minAreaRect(points.reshape((int(len(points)), 2)))
+        points = cv2.boxPoints(points).reshape((-1))
+        box, rotate = get_rotate(points)
+        x, y, w, h = box
         
-#     write_lines(label_fpath, lines)    
+        x1, y1, w1, h1 = cv2.boundingRect(points.reshape((4, 2)))
+        
+        x += w / 2
+        y += h / 2
+        label_str = '0 {:d} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.1f} {:.1f} {:.1f} {:.1f} {}\n'.format(
+        tid_curr, x / seq_width, y / seq_height, w / seq_width, h / seq_height, rotate,x1, y1, x1 + w1, y1 + h1, word)
+        lines.append(label_str)
+        
+    write_lines(label_fpath, lines)    
     
 
 
-gen_data_path("/share/wuweijia/Data/VideoText/MOTR/SynthText/labels_with_ids/train")
+# gen_data_path("/share/wuweijia/Data/VideoText/MOTR/SynthText/labels_with_ids/train")
 

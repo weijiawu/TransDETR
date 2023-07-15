@@ -220,6 +220,7 @@ for seq in seqs:
                 print(points)
                 print(int(len(points)/2))
                 assert False
+                
             # 获取矩形四个顶点，浮点型
             points = cv2.boxPoints(points).reshape((-1))
             box, rotate = get_rotate(points)

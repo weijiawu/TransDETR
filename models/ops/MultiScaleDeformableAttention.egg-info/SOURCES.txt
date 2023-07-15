@@ -1,10 +1,9 @@
+make.sh
 setup.py
-/home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETR/models/ops/src/vision.cpp
-/home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETR/models/ops/src/cpu/ms_deform_attn_cpu.cpp
-/home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETR/models/ops/src/cuda/ms_deform_attn_cuda.cu
-/home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/src/vision.cpp
-/home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/src/cpu/ms_deform_attn_cpu.cpp
-/home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/src/cuda/ms_deform_attn_cuda.cu
+test.py
+/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/vision.cpp
+/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/cpu/ms_deform_attn_cpu.cpp
+/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/cuda/ms_deform_attn_cuda.cu
 MultiScaleDeformableAttention.egg-info/PKG-INFO
 MultiScaleDeformableAttention.egg-info/SOURCES.txt
 MultiScaleDeformableAttention.egg-info/dependency_links.txt
@@ -13,3 +12,10 @@ functions/__init__.py
 functions/ms_deform_attn_func.py
 modules/__init__.py
 modules/ms_deform_attn.py
+src/ms_deform_attn.h
+src/vision.cpp
+src/cpu/ms_deform_attn_cpu.cpp
+src/cpu/ms_deform_attn_cpu.h
+src/cuda/ms_deform_attn_cuda.cu
+src/cuda/ms_deform_attn_cuda.h
+src/cuda/ms_deform_im2col_cuda.cuh

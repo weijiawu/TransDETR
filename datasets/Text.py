@@ -146,7 +146,7 @@ class DetMOTDetection:
         self.max_word_len = 32
         
         
-        self.vis = False
+        self.vis = True
         
     def _register_videos(self):
         for label_name in self.label_files:

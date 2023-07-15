@@ -156,10 +156,7 @@ def getBboxesAndLabels_icd13(height, width, annotations):
         x, y, w, h = cv2.boundingRect(points.reshape((4, 2)))
         box = np.array([x, y, w, h])
         
-#         label = annotation.attrib["Transcription"]
-#         Transcription = annotation.attrib["Transcription"]
-        
-        
+
 #         quality = annotation.attrib["Quality"]
         Transcription = annotation.attrib["Transcription"]
         if Transcription == "##DONT#CARE##":
@@ -204,6 +201,7 @@ def parse_xml(annotation_path,image_path):
             tree = ET.parse(load_f, parser=utf8_parser)
         root = tree.getroot()  # 获取树型结构的根
     bboxess, IDss, rotatess, wordss,orignial_bboxess = [], [] , [], [], []
+
     img = cv2.imread(image_path)
     height, width = img.shape[:2]
 
@@ -216,6 +214,8 @@ def parse_xml(annotation_path,image_path):
         rotatess.append(rotates)
         wordss.append(words)
         orignial_bboxess.append(orignial_bboxes)
+
+        
     return bboxess, IDss, rotatess,wordss, orignial_bboxess
 
 def mkdirs(d):
@@ -241,10 +241,15 @@ def gen_data_path(path,split_train_test="train",data_path_str = "./datasets/data
                 lines.append(frame_real_path)
     write_lines(data_path_str, lines)  
     
+# path of ground truth of ICDAR2015 video
+from_label_root = "./DSText/V2_copy/V2_Ann_xml"
 
-from_label_root = "./Annotation_xml/Train"
-seq_root = './DSText/images/train'
-label_root = './DSText/labels_with_ids/train'
+# path of video frames 
+seq_root = './dataset/DSText/images/train/'
+
+# path to generate the annotation
+label_root = './dataset/DSText/labels_with_ids/train'
+
 mkdirs(label_root)
 
 seqs = []
@@ -253,8 +258,6 @@ for cls in os.listdir(seq_root):
     for s in os.listdir(seq_root_cls):
         seqs.append(os.path.join(cls,s))
         
-
-print(seqs[:3])
 
 tid_curr = 0
 tid_last = -1
@@ -272,15 +275,19 @@ for seq in tqdm(seqs):
         frame_id = i + 1
         label_fpath = osp.join(seq_label_root, '{}.txt'.format(frame_id))
         frame_path_one = osp.join(image_path_frame,"{}.jpg".format(frame_id))
-        img = cv2.imread(frame_path_one)
-        seq_height, seq_width = img.shape[:2]
+        try:
+            img = cv2.imread(frame_path_one)
+            seq_height, seq_width = img.shape[:2]
+        except:
+            print(frame_path_one)
+            assert False
         
         lines = []
         if IDss[i] == []:
             with open(label_fpath, 'w') as f:
                 pass
                 continue
-#                 f.write(label_str)
+
         for bboxes,IDs,rotates,word,orignial_bboxes in zip(bboxess[i],IDss[i],rotatess[i],wordss[i],orignial_bboxess[i]):
             track_id = int(IDs)            
             x, y, w, h = bboxes
@@ -302,4 +309,5 @@ for seq in tqdm(seqs):
             
         write_lines(label_fpath, lines)     
 
-gen_data_path(path="./DSText")
+# to generate the data_path 
+gen_data_path(path="./Dataset/DSText")

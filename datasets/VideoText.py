@@ -164,7 +164,7 @@ class DetMOTDetection:
             self.current_epoch = 0
         
         
-        self.max_word_num = 50
+        self.max_word_num = 500
         self.max_word_len = 32
         
         
@@ -245,6 +245,8 @@ class DetMOTDetection:
                         print(text)
 
                     word = text[-1]
+                    if 'DSText' in img_path:
+                        word = word.lower()
                     
                     gt_word = np.full((self.max_word_len,), self.char2id['PAD'], dtype=np.int)
                     for j, char in enumerate(word):
@@ -254,7 +256,7 @@ class DetMOTDetection:
                             gt_word[j] = self.char2id[char]
                         else:
                             gt_word[j] = self.char2id['UNK']
-                            
+
                     if not self.use_ctc:
                         if len(word) > self.max_word_len - 1:
                             gt_word[-1] = self.char2id['EOS']
@@ -434,9 +436,9 @@ class DetMOTDetection:
                         cv2.polylines(image, [points], True, (0,255,255), thickness=4)
                         
                     short_side = min(imge.shape[0],imge.shape[1])
-                    text_size = int(short_side * 0.05)
+                    text_size = int(short_side * 0.03)
 #                     print(word)
-                    image=cv2AddChineseText(image,str(word.cpu().numpy()), (2, 100),(0,255,255), text_size)
+                    image=cv2AddChineseText(image,str(word.cpu().numpy()), (res[0,0], res[1,0]),(0,255,255), text_size)
 #                     image=cv2AddChineseText(image,str(obj_id.cpu().numpy())+str(texts_ignored.cpu().numpy()), (int(res[0,0]), int(res[1,0]) - text_size),(0,255,255), text_size)
 
                 cv2.imwrite("./exps/show/{}_{}.jpg".format(image_icdxx,idx1),image)

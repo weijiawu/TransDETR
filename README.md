@@ -20,6 +20,8 @@ Link to our new benchmark [BOVText: A Large-Scale, Bilingual Open World Dataset 
 
 ## Updates
 
+- (15/07/2023) Support Chinese Recognition, Add NMS (Non-Maximum Suppression) and optimized post-processing.
+
 - (10/02/2023) Training and Inference for [DSText](https://rrc.cvc.uab.es/?ch=22&com=downloads) is updated.
 
 - (09/02/2023) Script(visualization and frame extraction) for [DSText](https://rrc.cvc.uab.es/?ch=22&com=downloads) is provided.
@@ -162,6 +164,15 @@ python3 gen_labels_15.py
 python3 gen_labels_YVT.py
 cd ../../
 ```
+(These scripts are mainly intended to accomplish two tasks: 1) Generate the ground truth in the ```labels_with_ids``` path. 2) Generate the corresponding training image list (*.txt) for each dataset's training set in the ```./datasets/data_path```.)
+
+Note: Before running the corresponding script, you need to modify the paths in the .py file to your own paths. Specifically, you should modify the following paths:
+
+- ```from_label_root```: the path of the original ground truth data (e.g., the path to the .xml files for ICDAR15).
+- ```seq_root```: the path of the video frames.
+- ```label_root```: the path to generate the annotations.
+Finally, when running the gen_data_path function to generate the training image list (*.txt), modify the ```path``` accordingly.
+
 ### Training and Evaluation
 
 #### Training on single node

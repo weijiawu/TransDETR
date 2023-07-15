@@ -1,0 +1,4 @@
+# ninja log v5
+1	3320	1684759865981694000	/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/build/temp.linux-x86_64-cpython-38/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/cpu/ms_deform_attn_cpu.o	65db1e18c26b51c4
+2	10971	1684759873629602000	/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/build/temp.linux-x86_64-cpython-38/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/cuda/ms_deform_attn_cuda.o	cf73101f299e27a9
+3	20793	1684759883445484000	/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/build/temp.linux-x86_64-cpython-38/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/vision.o	95fc807a303f4237

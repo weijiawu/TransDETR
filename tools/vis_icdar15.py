@@ -167,13 +167,13 @@ if __name__ == "__main__":
     
     
     
-#     root = "/share/wuweijia/MyBenchMark/relabel/To30s/final_MOVText/"  e2e_TransVTS_r50_ICDAR15  e2e_TransVTS_r50_COCOTextV2
-    annotation_path_root ="./exps/e2e_TransVTS_r50_ICDAR15/jons"
-    txt_path = "./exps/e2e_TransVTS_r50_ICDAR15/preds"
+#     root = "/share/wuweijia/MyBenchMark/relabel/To30s/final_MOVText/"  e2e_TransVTS_r50_ICDAR15  e2e_TransVTS_r50_COCOTextV2  e2e_TransVTS_r50_UnrealText
+    annotation_path_root ="./exps/e2e_TransVTS_r50_UnrealText/jons"
+    txt_path = "./exps/e2e_TransVTS_r50_UnrealText/preds"
     
 #     video_path = "/share/wuweijia/MyBenchMark/relabel/To30s/Video"
     frame_path_root = "/share/wuweijia/Data/ICDAR2015_video/test/frames/"
-    result_path_cls_root = "./exps/vis_icdar15"
+    result_path_cls_root = "./exps/vis_icdar15_synthtext"
     print( os.listdir(annotation_path_root))
     
     dic_name = {}
@@ -187,8 +187,8 @@ if __name__ == "__main__":
         if "pynb" in seq:
             continue
         print(seq) # Video_35_2_3.mp4
-#         if seq!= "Video_38_2_3.json":
-#             continue
+        if seq!= "Video_5_3_2.json":
+            continue
         txt_ = os.path.join(txt_path,"res_video_{}.txt".format(seq.split("_")[1]))
         
         dicst_data = {}
@@ -246,7 +246,8 @@ if __name__ == "__main__":
             for data in annotatation_frame:
                 x1,y1,x2,y2,x3,y3,x4,y4 =  [int(float(i)) for i in data["points"]]
                 ID = data["ID"]
-                id_content = dicst_data[str(ID)]
+#                 id_content = dicst_data[str(ID)]
+                id_content = "###"
                 
 #                 id_content = str(data["transcription"])
 
@@ -276,7 +277,8 @@ if __name__ == "__main__":
                 x1,y1,x2,y2,x3,y3,x4,y4 =  [int(float(i)) for i in data["points"]]
                 ID = data["ID"]
 #                 id_content = str(data["transcription"])
-                id_content = dicst_data[str(ID)]
+#                 id_content = dicst_data[str(ID)]
+                id_content = "###"
     
                 short_side = min(frame.shape[0],frame.shape[1])
                 text_size = int(short_side * 0.03)

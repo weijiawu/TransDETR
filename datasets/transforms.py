@@ -373,9 +373,31 @@ class FixedMotRandomCrop(object):
     def __call__(self, imgs: list, targets: list):
         ret_imgs = []
         ret_targets = []
-        w = random.randint(self.min_size, min(imgs[0].width, self.max_size))
-        h = random.randint(self.min_size, min(imgs[0].height, self.max_size))
-        region = T.RandomCrop.get_params(imgs[0], [h, w])
+        
+#         for c in range(20):
+#             w = random.randint(self.min_size, min(imgs[0].width, self.max_size))
+#             h = random.randint(self.min_size, min(imgs[0].height, self.max_size))
+#             region = T.RandomCrop.get_params(imgs[0], [h, w])
+#             i, j, h, w = region
+#             x_min, y_min, x_max, y_max = j, i, j+w, i+h
+            
+#             targets_i = targets[0]
+#             index = np.where(targets_i["upright_box"][:,0]<x_min)
+#             targets_i['texts_ignored'][index] = 0
+
+#             index = np.where(targets_i["upright_box"][:,1]<y_min)
+#             targets_i['texts_ignored'][index] = 0
+            
+#             index = np.where(targets_i["upright_box"][:,2]>x_max)
+#             targets_i['texts_ignored'][index] = 0
+            
+#             index = np.where(targets_i["upright_box"][:,3]>y_max)
+#             targets_i['texts_ignored'][index] = 0
+            
+#             if targets_i['texts_ignored'].sum()>0:
+#                 break
+        
+#         print(targets_i['texts_ignored'].sum())
         
 #         i, j, h, w = region
 #         for img_i, targets_i in zip(imgs, targets):
@@ -384,8 +406,12 @@ class FixedMotRandomCrop(object):
 #                 l, t, r, b = box
 #                 if (l<j and j<r) or (l<j+w and j+w<r) or (t<i and i<b) or (t<i+h and i+h<b):
                     
+        w = random.randint(self.min_size, min(imgs[0].width, self.max_size))
+        h = random.randint(self.min_size, min(imgs[0].height, self.max_size))
+        region = T.RandomCrop.get_params(imgs[0], [h, w])
         i, j, h, w = region
         x_min, y_min, x_max, y_max = j, i, j+w, i+h
+        
         for img_i, targets_i in zip(imgs, targets):
             
             index = np.where(targets_i["upright_box"][:,0]<x_min)

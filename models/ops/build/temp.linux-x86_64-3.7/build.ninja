@@ -2,9 +2,9 @@ ninja_required_version = 1.3
 cxx = c++
 nvcc = /usr/local/cuda/bin/nvcc
 
-cflags = -pthread -B /opt/conda/envs/TransDETR/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -DWITH_CUDA -I/home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/src -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/torch/csrc/api/include -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/TH -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/THC -I/usr/local/cuda/include -I/opt/conda/envs/TransDETR/include/python3.7m -c
+cflags = -pthread -B /opt/conda/envs/TransDETR/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -DWITH_CUDA -I/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/torch/csrc/api/include -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/TH -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/THC -I/usr/local/cuda/include -I/opt/conda/envs/TransDETR/include/python3.7m -c
 post_cflags = -DTORCH_API_INCLUDE_EXTENSION_H '-DPYBIND11_COMPILER_TYPE="_gcc"' '-DPYBIND11_STDLIB="_libstdcpp"' '-DPYBIND11_BUILD_ABI="_cxxabi1011"' -DTORCH_EXTENSION_NAME=MultiScaleDeformableAttention -D_GLIBCXX_USE_CXX11_ABI=0 -std=c++14
-cuda_cflags = -DWITH_CUDA -I/home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/src -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/torch/csrc/api/include -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/TH -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/THC -I/usr/local/cuda/include -I/opt/conda/envs/TransDETR/include/python3.7m -c
+cuda_cflags = -DWITH_CUDA -I/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/torch/csrc/api/include -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/TH -I/opt/conda/envs/TransDETR/lib/python3.7/site-packages/torch/include/THC -I/usr/local/cuda/include -I/opt/conda/envs/TransDETR/include/python3.7m -c
 cuda_post_cflags = -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr --compiler-options ''"'"'-fPIC'"'"'' -DCUDA_HAS_FP16=1 -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ -DTORCH_API_INCLUDE_EXTENSION_H '-DPYBIND11_COMPILER_TYPE="_gcc"' '-DPYBIND11_STDLIB="_libstdcpp"' '-DPYBIND11_BUILD_ABI="_cxxabi1011"' -DTORCH_EXTENSION_NAME=MultiScaleDeformableAttention -D_GLIBCXX_USE_CXX11_ABI=0 -gencode=arch=compute_70,code=compute_70 -gencode=arch=compute_70,code=sm_70 -std=c++14
 ldflags = 
 
@@ -20,9 +20,9 @@ rule cuda_compile
 
 
 
-build /home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/build/temp.linux-x86_64-3.7/home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/src/vision.o: compile /home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/src/vision.cpp
-build /home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/build/temp.linux-x86_64-3.7/home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/src/cpu/ms_deform_attn_cpu.o: compile /home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/src/cpu/ms_deform_attn_cpu.cpp
-build /home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/build/temp.linux-x86_64-3.7/home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/src/cuda/ms_deform_attn_cuda.o: cuda_compile /home/wangjue_Cloud/wuweijia/Code/VideoSpotting/TransDETRe2e/models/ops/src/cuda/ms_deform_attn_cuda.cu
+build /mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/build/temp.linux-x86_64-3.7/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/cpu/ms_deform_attn_cpu.o: compile /mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/cpu/ms_deform_attn_cpu.cpp
+build /mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/build/temp.linux-x86_64-3.7/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/cuda/ms_deform_attn_cuda.o: cuda_compile /mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/cuda/ms_deform_attn_cuda.cu
+build /mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/build/temp.linux-x86_64-3.7/mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/vision.o: compile /mmu-ocr/weijiawu/Code/VideoSpotting/TransDETRe2e/models/ops/src/vision.cpp
 
 
 
