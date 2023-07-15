@@ -20,7 +20,7 @@ Link to our new benchmark [BOVText: A Large-Scale, Bilingual Open World Dataset 
 
 ## Updates
 
-- (15/07/2023) Support Chinese Recognition, Add NMS (Non-Maximum Suppression) and optimized post-processing.
+- (15/07/2023) Support Chinese Recognition, Add NMS (Non-Maximum Suppression) and optimized [post-processing,RuntimeTrackerBase](https://github.com/weijiawu/TransDETR/blob/main/models/TransDETR_ignored.py).
 
 - (10/02/2023) Training and Inference for [DSText](https://rrc.cvc.uab.es/?ch=22&com=downloads) is updated.
 
@@ -115,42 +115,42 @@ Firstly, after downloading the video data, you can use [ExtractFrame_FromVideo.p
 
 
 ```
-.
-├── COCOText
-│   ├── images
-│   └── labels_with_ids
-├── ICDAR15
-│   ├── images
-│       ├── track
-│           ├── train
-                ├──Video_10_1_1
-                    ├──1.jpg
-                    ├──2.jpg
-                ├──Video_13_4_1
-│           ├── val
-                ├──Video_11_4_1
-│   ├── labels
-│       ├── track
-│           ├── train
-│           ├── val
-├── DSText
-│   ├── images
-│       ├── train
-│           ├── Activity
-│           ├── Driving
-│           ├── Game
-│           ├── ....
-│       ├── test
-│           ├── Activity
-│           ├── Driving
-│           ├── Game
-│           ├── ....
-│   ├── labels_with_ids
-│       ├── train
-│           ├── Activity
-│           ├── Driving
-│           ├── Game
-│           ├── ....
+./Data
+    ├── COCOText
+    │   ├── images
+    │   └── labels_with_ids
+    ├── ICDAR15
+    │   ├── images
+    │       ├── track
+    │           ├── train
+                    ├──Video_10_1_1
+                        ├──1.jpg
+                        ├──2.jpg
+                    ├──Video_13_4_1
+    │           ├── val
+                    ├──Video_11_4_1
+    │   ├── labels
+    │       ├── track
+    │           ├── train
+    │           ├── val
+    ├── DSText
+    │   ├── images
+    │       ├── train
+    │           ├── Activity
+    │           ├── Driving
+    │           ├── Game
+    │           ├── ....
+    │       ├── test
+    │           ├── Activity
+    │           ├── Driving
+    │           ├── Game
+    │           ├── ....
+    │   ├── labels_with_ids
+    │       ├── train
+    │           ├── Activity
+    │           ├── Driving
+    │           ├── Game
+    │           ├── ....
 
 ```
 
@@ -176,6 +176,8 @@ Finally, when running the gen_data_path function to generate the training image 
 ### Training and Evaluation
 
 #### Training on single node
+
+Before training, you need to modify the following paths in the .sh file: ```mot_path```: your data path (e.g., ./Data). ```data_txt_path_train```: the training image list file (.txt) that was generated during the data preparation. Please update these paths to match your specific setup.
 
 You can download COCOTextV2 pretrained weights from Pretrained TransDETR [Google Drive](https://drive.google.com/file/d/1PvOvBVpJLewN5uMnSeiJddmDGh3rKcyv/view?usp=sharing). Or training by youself:
 ```bash 
