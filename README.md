@@ -179,7 +179,7 @@ Finally, when running the gen_data_path function to generate the training image 
 
 Before training, you need to modify the following paths in the .sh file: ```mot_path```: your data path (e.g., ./Data). ```data_txt_path_train```: the training image list file (.txt) that was generated during the data preparation. Please update these paths to match your specific setup.
 
-You can download COCOTextV2 pretrained weights from Pretrained TransDETR [Google Drive](https://drive.google.com/file/d/1PvOvBVpJLewN5uMnSeiJddmDGh3rKcyv/view?usp=sharing). Or training by youself:
+You can download COCOTextV2 pretrained weights for Pretrained TransDETR [Google Drive](https://drive.google.com/file/d/1PvOvBVpJLewN5uMnSeiJddmDGh3rKcyv/view?usp=sharing). Or training by youself:
 ```bash 
 sh configs/r50_TransDETR_pretrain_COCOText.sh
 
