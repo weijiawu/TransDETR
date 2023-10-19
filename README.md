@@ -221,7 +221,7 @@ zip -r preds.zip ./preds/*
 then submit to the [ICDAR2015 online metric](https://rrc.cvc.uab.es/?ch=3&com=evaluation&task=4)
 
 #### Evaluation on DSText
-Inference 
+Inference , we also provide the trained weight on [Google drive](https://drive.google.com/file/d/1eHlfNwOet-g4KOQZwt0IMERY4G_nlKW-/view?usp=sharing)
 ```bash 
 sh configs/r50_TransDETR_eval_BOVText.sh
 
