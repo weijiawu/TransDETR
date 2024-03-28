@@ -19,6 +19,7 @@ Link to our new benchmark [BOVText: A Large-Scale, Bilingual Open World Dataset 
 
 
 ## Updates
+- (28/03/2024) This paper has been accepted by IJCV.
 
 - (15/07/2023) Support Chinese Recognition, Add NMS (Non-Maximum Suppression) and optimized [post-processing,RuntimeTrackerBase](https://github.com/weijiawu/TransDETR/blob/main/models/TransDETR_ignored.py).
 
